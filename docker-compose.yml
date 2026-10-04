@@ -1,0 +1,28 @@
+# docker compose up -d            → Nexus SCADA on http://localhost:8080
+# docker compose --profile iot up → also starts a Mosquitto MQTT broker (mqtt://mosquitto:1883 inside compose)
+services:
+  nexus:
+    build: .
+    image: nexus-scada:latest
+    container_name: nexus-scada
+    ports:
+      - "8080:8080"
+    volumes:
+      - nexus-data:/data          # project (YAML, displays, scripts) + SQLite historian
+    environment:
+      NEXUS_SECRET: change-me-to-a-long-random-string
+      TZ: Asia/Tehran
+      LOG_LEVEL: info
+    restart: unless-stopped
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    profiles: [iot]
+    container_name: nexus-mqtt
+    command: mosquitto -c /mosquitto-no-auth.conf
+    ports:
+      - "1883:1883"
+    restart: unless-stopped
+
+volumes:
+  nexus-data:

@@ -1,0 +1,25 @@
+name: Plant/Area1
+title: Area 1 — 3D
+environment: studio
+grid: true
+shadows: true
+camera: { position: [9, 7, 11], target: [0, 1, 0], fov: 45 }
+objects:
+  - { id: floor, type: plane, name: Floor, position: [0, 0, 0], rotation: [0, 0, 0], scale: [18, 1, 12], props: { color: '#1e293b', roughness: 0.9 } }
+  - { id: t101, type: tank, name: T-101, position: [-3, 1.65, 0], rotation: [0, 0, 0], scale: [1, 1, 1], props: { fillColor: '#38bdf8', showLabel: true, text: T-101 }, bindings: { level: { tag: Plant/Area1/Tank1/Level } }, faceplate: { path: Plant/Area1/Tank1, display: Faceplates/Tank } }
+  - { id: t102, type: tank, name: T-102, position: [3, 1.65, 0], rotation: [0, 0, 0], scale: [1, 1, 1], props: { fillColor: '#22d3ee', showLabel: true, text: T-102 }, bindings: { level: { tag: Plant/Area1/Tank2/Level } }, faceplate: { path: Plant/Area1/Tank2, display: Faceplates/Tank } }
+  - { id: inlet, type: pipe, name: Inlet pipe, position: [-5.6, 2.3, 0], rotation: [0, 0, 0], scale: [3.2, 1, 1], props: { flowColor: '#38bdf8' }, bindings: { flowing: { tag: Plant/Area1/Tank1/InletValve } } }
+  - { id: xv101, type: valve, name: XV-101, position: [-5.2, 2.3, 0], rotation: [0, 0, 0], scale: [1, 1, 1], props: { showLabel: true, text: XV-101, labelHeight: 0.9 }, bindings: { open: { tag: Plant/Area1/Tank1/InletValve } }, faceplate: { path: Plant/Area1/Tank1 } }
+  - { id: pipe1, type: pipe, name: T-101 outlet, position: [-3, 0.38, 0.75], rotation: [0, 1.5708, 0], scale: [1.5, 1, 1], props: {}, bindings: { flowing: { tag: Plant/Area1/Tank1/Pump/Running } } }
+  - { id: pipe2, type: pipe, name: Suction, position: [-1.8, 0.38, 1.5], rotation: [0, 0, 0], scale: [2.4, 1, 1], props: {}, bindings: { flowing: { tag: Plant/Area1/Tank1/Pump/Running } } }
+  - { id: p101, type: pump, name: P-101, position: [0, 0.38, 1.5], rotation: [0, 0, 0], scale: [1, 1, 1], props: { showLabel: true, text: P-101, labelHeight: 1 }, bindings: { running: { tag: Plant/Area1/Tank1/Pump/Running }, speed: { tag: Plant/Area1/Tank1/Pump/Speed } }, faceplate: { path: Plant/Area1/Tank1/Pump } }
+  - { id: pipe3, type: pipe, name: Discharge, position: [1.8, 0.38, 1.5], rotation: [0, 0, 0], scale: [2.4, 1, 1], props: {}, bindings: { flowing: { tag: Plant/Area1/Tank1/Pump/Running } } }
+  - { id: xv102, type: valve, name: XV-102, position: [2.2, 0.38, 1.5], rotation: [0, 0, 0], scale: [0.8, 0.8, 0.8], props: {}, bindings: { open: { tag: Plant/Area1/Tank2/InletValve } }, faceplate: { path: Plant/Area1/Tank2 } }
+  - { id: pipe4, type: pipe, name: T-102 inlet, position: [3, 0.38, 0.75], rotation: [0, 1.5708, 0], scale: [1.5, 1, 1], props: {}, bindings: { flowing: { tag: Plant/Area1/Tank2/InletValve } } }
+  - { id: p102, type: pump, name: P-102, position: [5, 0.38, 0], rotation: [0, 3.1416, 0], scale: [1, 1, 1], props: { showLabel: true, text: P-102, labelHeight: 1 }, bindings: { running: { tag: Plant/Area1/Tank2/Pump/Running } }, faceplate: { path: Plant/Area1/Tank2/Pump } }
+  - { id: blower, type: fan, name: Blower, position: [-5, 1.2, 3.5], rotation: [0, 0.6, 0], scale: [1.6, 1.6, 1.6], props: { showLabel: true, text: Blower }, bindings: { running: { tag: Plant/Area1/BlowerRunning }, fault: { tag: Plant/Area1/Vibration, expr: 'value > 9' } }, faceplate: { path: Plant/Area1/Vibration } }
+  - { id: conveyor, type: conveyor, name: Packaging line, position: [1, 0.55, -3.5], rotation: [0, 0, 0], scale: [1.6, 1, 1], props: {}, bindings: { running: { tag: Plant/Area1/Tank1/Pump/Running } } }
+  - { id: motor, type: motor, name: M-200, position: [-1.4, 0.55, -3.5], rotation: [0, 0, 0], scale: [1, 1, 1], props: {}, bindings: { running: { tag: Plant/Area1/Tank1/Pump/Running } } }
+  - { id: cabinet, type: box, name: Control cabinet, position: [6.5, 1, -3], rotation: [0, -0.4, 0], scale: [1.2, 2, 0.6], props: { color: '#475569', metalness: 0.6 }, faceplate: { path: System } }
+  - { id: estop, type: lamp, name: E-stop beacon, position: [6.5, 2.3, -3], rotation: [0, 0, 0], scale: [1, 1, 1], props: { color: '#ef4444', intensity: 8 }, bindings: { on: { tag: Plant/Area1/EmergencyStop } } }
+  - { id: pressure, type: label, name: Header pressure, position: [0, 2.2, 1.5], rotation: [0, 0, 0], scale: [1, 1, 1], props: { text: Header pressure }, bindings: { value: { tag: Plant/Area1/Pressure, expr: "value.toFixed(2) + ' bar'" } } }

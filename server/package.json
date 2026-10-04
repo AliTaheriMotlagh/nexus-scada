@@ -1,0 +1,25 @@
+{
+  "name": "@nexus/server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch-path=src --watch-path=../shared --disable-warning=ExperimentalWarning src/index.ts",
+    "start": "node --disable-warning=ExperimentalWarning src/index.ts",
+    "typecheck": "tsc --noEmit -p .",
+    "test": "node --disable-warning=ExperimentalWarning --test test/*.test.ts",
+    "hash-password": "node --disable-warning=ExperimentalWarning src/tools/hash-password.ts"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "mqtt": "^5.16.0",
+    "sucrase": "^3.35.1",
+    "ws": "^8.22.0",
+    "yaml": "^2.9.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^24.0.0",
+    "@types/ws": "^8.18.2"
+  }
+}

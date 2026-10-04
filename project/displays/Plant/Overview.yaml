@@ -1,0 +1,163 @@
+name: Plant/Overview
+title: Area 1 — Water Treatment
+kind: page
+width: 1600
+height: 900
+background: '#0f1722'
+grid: 10
+scripts:
+  onOpen: |
+    log.info(`Overview opened by ${ui.user?.username ?? 'anonymous'}`);
+  timerMs: 1000
+  onTimer: |
+    // Page script (same TypeScript API as server scripts + ui/display/element)
+    const n = alarms.unackedCount('Plant');
+    display.element('alarmInfo')?.set('text', n ? `⚠ ${n} unacknowledged alarm(s)` : '✓ all alarms acknowledged');
+    display.element('alarmInfo')?.set('color', n ? '#fca5a5' : '#86efac');
+elements:
+  # ── frame ──
+  - { id: title, type: text, x: 24, y: 12, w: 620, h: 40, props: { text: 'Area 1 — Water Treatment', fontSize: 24, fontWeight: '700', color: '#e2e8f0' } }
+  - { id: alarmInfo, type: text, x: 660, y: 18, w: 420, h: 28, props: { text: '', fontSize: 14, color: '#86efac' } }
+  - { id: clock, type: clock, x: 1400, y: 16, w: 180, h: 32, props: { format: datetime, fontSize: 14, color: '#94a3b8' } }
+  - { id: pnlProcess, type: rect, x: 16, y: 60, w: 1064, h: 566, locked: true, props: { fill: '#111b27', stroke: '#233244', radius: 10 } }
+  - { id: pnlKpi, type: rect, x: 1092, y: 60, w: 492, h: 254, locked: true, props: { fill: '#111b27', stroke: '#233244', radius: 10 } }
+  - { id: pnlTrend, type: rect, x: 1092, y: 326, w: 492, h: 300, locked: true, props: { fill: '#111b27', stroke: '#233244', radius: 10 } }
+  - { id: pnlCtl, type: rect, x: 1092, y: 638, w: 492, h: 248, locked: true, props: { fill: '#111b27', stroke: '#233244', radius: 10 } }
+  - { id: lblProcess, type: text, x: 30, y: 66, w: 300, h: 24, props: { text: 'PROCESS', fontSize: 12, fontWeight: '700', color: '#64748b' } }
+
+  # ── inlet ──
+  - { id: pipeIn, type: pipe, x: 30, y: 190, w: 152, h: 18, props: { color: '#64748b' }, bindings: { flowing: { tag: Plant/Area1/Tank1/InletValve } } }
+  - { id: lblRaw, type: text, x: 30, y: 160, w: 150, h: 24, props: { text: 'Raw water ▸', fontSize: 12, color: '#94a3b8' } }
+  - id: xv101
+    type: valve
+    name: XV-101
+    x: 180
+    y: 164
+    w: 70
+    h: 70
+    props: {}
+    bindings: { open: { tag: Plant/Area1/Tank1/InletValve } }
+    tooltip: XV-101 inlet valve — click to toggle
+    role: operator
+    events:
+      click: |
+        const open = tags.get('Plant/Area1/Tank1/InletValve');
+        if (await ui.confirm(`${open ? 'Close' : 'Open'} inlet valve XV-101?`)) {
+          await tags.write('Plant/Area1/Tank1/InletValve', !open);
+          ui.toast(`XV-101 ${open ? 'closed' : 'opened'}`, 'success');
+        }
+  - { id: lblXv101, type: text, x: 180, y: 236, w: 70, h: 20, props: { text: XV-101, fontSize: 11, align: center, color: '#94a3b8' } }
+  - { id: pipeB, type: pipe, x: 248, y: 190, w: 94, h: 18, props: {}, bindings: { flowing: { tag: Plant/Area1/Tank1/InletValve } } }
+
+  # ── tank T-101 ──
+  - id: t101
+    type: tank
+    name: T-101
+    x: 340
+    y: 110
+    w: 130
+    h: 260
+    props: { label: T-101, fillColor: '#38bdf8', unit: '%' }
+    bindings:
+      level: { tag: Plant/Area1/Tank1/Level }
+      fillColor: { tag: Plant/Area1/Tank1/Level, map: [{ when: '>=85', value: '#f97316' }, { when: '<=15', value: '#f97316' }, { when: default, value: '#38bdf8' }] }
+    faceplate: { path: Plant/Area1/Tank1, display: Faceplates/Tank }
+    tooltip: T-101 raw water tank — click for faceplate
+  - { id: mode1, type: multistate, x: 340, y: 382, w: 130, h: 26, props: { tag: Plant/Area1/Tank1/Mode, states: 'Auto:AUTO:#1d4ed8,Manual:MANUAL:#a16207' } }
+  - { id: tt101, type: instrument, x: 486, y: 120, w: 56, h: 56, props: { function: TT, loop: '101', unit: °C, decimals: 1 }, bindings: { value: { tag: Plant/Area1/Tank1/Temperature } }, faceplate: { path: Plant/Area1/Tank1/Temperature } }
+  - { id: lt101, type: instrument, x: 486, y: 196, w: 56, h: 56, props: { function: LT, loop: '101', unit: '%', decimals: 1 }, bindings: { value: { tag: Plant/Area1/Tank1/Level } }, faceplate: { path: Plant/Area1/Tank1/Level } }
+
+  # ── pump P-101 ──
+  - { id: pipeC, type: pipe, x: 470, y: 340, w: 102, h: 18, props: {}, bindings: { flowing: { tag: Plant/Area1/Tank1/Pump/Running } } }
+  - id: p101
+    type: pump
+    name: P-101
+    x: 570
+    y: 302
+    w: 90
+    h: 90
+    props: {}
+    bindings:
+      running: { tag: Plant/Area1/Tank1/Pump/Running }
+      speed: { tag: Plant/Area1/Tank1/Pump/Speed }
+      fault: { tag: Plant/Area1/Tank1/Pump/Current, expr: 'value > 20' }
+    tooltip: P-101 — click to start/stop
+    role: operator
+    events:
+      click: |
+        const path = 'Plant/Area1/Tank1/Pump/Running';
+        const running = tags.get(path);
+        if (await ui.confirm(`${running ? 'Stop' : 'Start'} pump P-101?`)) await tags.toggle(path);
+  - { id: lblP101, type: text, x: 560, y: 394, w: 110, h: 20, props: { text: P-101, fontSize: 11, align: center, color: '#94a3b8' } }
+  - { id: cur1, type: value, x: 560, y: 414, w: 110, h: 26, props: { tag: Plant/Area1/Tank1/Pump/Current, fontSize: 13 } }
+  - { id: pipeD, type: pipe, x: 656, y: 340, w: 106, h: 18, props: {}, bindings: { flowing: { tag: Plant/Area1/Tank1/Pump/Running } } }
+  - { id: pt100, type: instrument, x: 690, y: 250, w: 56, h: 56, props: { function: PT, loop: '100', unit: bar, decimals: 2, mounting: panel }, bindings: { value: { tag: Plant/Area1/Pressure } }, faceplate: { path: Plant/Area1/Pressure } }
+
+  # ── valve XV-102 / tank T-102 ──
+  - { id: xv102, type: valve, name: XV-102, x: 760, y: 314, w: 70, h: 70, props: {}, bindings: { open: { tag: Plant/Area1/Tank2/InletValve } }, faceplate: { path: Plant/Area1/Tank2 } }
+  - { id: lblXv102, type: text, x: 760, y: 386, w: 70, h: 20, props: { text: XV-102, fontSize: 11, align: center, color: '#94a3b8' } }
+  - { id: pipeE, type: pipe, x: 828, y: 340, w: 64, h: 18, props: {}, bindings: { flowing: { tag: Plant/Area1/Tank2/InletValve } } }
+  - id: t102
+    type: tank
+    name: T-102
+    x: 890
+    y: 110
+    w: 130
+    h: 260
+    props: { label: T-102, fillColor: '#22d3ee' }
+    bindings: { level: { tag: Plant/Area1/Tank2/Level } }
+    faceplate: { path: Plant/Area1/Tank2, display: Faceplates/Tank }
+  - { id: mode2, type: multistate, x: 890, y: 382, w: 130, h: 26, props: { tag: Plant/Area1/Tank2/Mode, states: 'Auto:AUTO:#1d4ed8,Manual:MANUAL:#a16207' } }
+  - { id: pipeF, type: pipe, x: 905, y: 411, w: 100, h: 18, rotation: 90, props: {}, bindings: { flowing: { tag: Plant/Area1/Tank2/Pump/Running } } }
+  - { id: p102, type: pump, name: P-102, x: 930, y: 470, w: 90, h: 90, props: {}, bindings: { running: { tag: Plant/Area1/Tank2/Pump/Running }, speed: { tag: Plant/Area1/Tank2/Pump/Speed } }, faceplate: { path: Plant/Area1/Tank2/Pump } }
+  - { id: lblP102, type: text, x: 920, y: 562, w: 110, h: 20, props: { text: P-102, fontSize: 11, align: center, color: '#94a3b8' } }
+  - { id: pipeG, type: pipe, x: 700, y: 506, w: 232, h: 18, props: { direction: left }, bindings: { flowing: { tag: Plant/Area1/Tank2/Pump/Running } } }
+  - { id: ft100, type: instrument, x: 760, y: 440, w: 56, h: 56, props: { function: FT, loop: '100', unit: m³/h, decimals: 0 }, bindings: { value: { tag: Plant/Area1/Flow } } }
+  - { id: lblDist, type: text, x: 560, y: 500, w: 140, h: 28, props: { text: '◂ Distribution', fontSize: 13, color: '#94a3b8' } }
+
+  # ── blower, dosing, safety ──
+  - { id: dosing, type: silo, x: 40, y: 300, w: 90, h: 170, props: { fillColor: '#a3e635', decimals: 0 }, bindings: { level: { tag: Plant/Area1/Tank1/Temperature, expr: '100 - (value - 18) / 16 * 100' } }, tooltip: Chemical dosing silo }
+  - { id: lblDosing, type: text, x: 30, y: 474, w: 110, h: 20, props: { text: Dosing, fontSize: 11, align: center, color: '#94a3b8' } }
+  - { id: blower, type: fan, x: 180, y: 430, w: 90, h: 90, props: {}, bindings: { running: { tag: Plant/Area1/BlowerRunning }, fault: { tag: Plant/Area1/Vibration, expr: 'value > 9' } }, faceplate: { path: Plant/Area1/Vibration } }
+  - id: vib
+    type: value
+    x: 160
+    y: 528
+    w: 140
+    h: 30
+    props: { tag: Plant/Area1/Vibration, fontSize: 13 }
+    bindings: { color: { tag: Plant/Area1/Vibration, expr: "value > 9 ? '#f87171' : value > 7 ? '#fbbf24' : '#e2e8f0'" } }
+  - { id: estopBeacon, type: beacon, x: 320, y: 440, w: 60, h: 60, props: {}, bindings: { active: { tag: Plant/Area1/EmergencyStop } } }
+  - { id: lblEstop, type: text, x: 300, y: 504, w: 100, h: 20, props: { text: E-STOP, fontSize: 11, align: center, color: '#94a3b8' } }
+  - { id: cyl1, type: cylinder3d, x: 420, y: 470, w: 50, h: 100, props: { color: '#0ea5e9' }, bindings: { color: { tag: Plant/Area1/BlowerRunning, map: [{ when: 'true', value: '#22c55e' }, { when: default, value: '#64748b' }] } }, tooltip: Air receiver }
+  - { id: cube1, type: cube3d, x: 470, y: 520, w: 60, h: 60, props: { color: '#8b5cf6' }, tooltip: Control cabinet, faceplate: { path: System } }
+
+  # ── KPI panel ──
+  - { id: lblKpi, type: text, x: 1106, y: 66, w: 300, h: 24, props: { text: 'KEY FIGURES', fontSize: 12, fontWeight: '700', color: '#64748b' } }
+  - { id: gPressure, type: gauge, x: 1104, y: 94, w: 150, h: 136, props: { tag: Plant/Area1/Pressure, min: 0, max: 10, label: Pressure, zones: '0:#22c55e,7:#f59e0b,7.5:#ef4444' } }
+  - { id: gFlow, type: gauge, x: 1262, y: 94, w: 150, h: 136, props: { tag: Plant/Area1/Flow, min: 0, max: 250, label: Flow, decimals: 0, zones: '0:#64748b,40:#22c55e,200:#f59e0b' } }
+  - { id: gVib, type: gauge, x: 1420, y: 94, w: 150, h: 136, props: { tag: Plant/Area1/Vibration, min: 0, max: 12, label: Vibration, zones: '0:#22c55e,7:#f59e0b,9:#ef4444' } }
+  - { id: vProd, type: value, x: 1104, y: 244, w: 228, h: 36, props: { tag: Plant/Area1/ProductionCount, label: Produced, fontSize: 16, decimals: 0 } }
+  - { id: vT1, type: value, x: 1342, y: 244, w: 228, h: 36, props: { tag: Plant/Area1/Tank1/Temperature, label: T-101 temp, fontSize: 16 } }
+  - { id: spark, type: sparkline, x: 1104, y: 284, w: 466, h: 26, props: { tag: Plant/Area1/Pressure, color: '#f59e0b' } }
+
+  # ── trend ──
+  - { id: lblTrend, type: text, x: 1106, y: 332, w: 300, h: 24, props: { text: 'LEVELS & PRESSURE — 10 MIN', fontSize: 12, fontWeight: '700', color: '#64748b' } }
+  - { id: trend1, type: trend, x: 1104, y: 358, w: 468, h: 256, props: { tags: 'Plant/Area1/Tank1/Level,Plant/Area1/Tank2/Level,Plant/Area1/Tank1/Setpoint', minutes: 10, legend: false } }
+
+  # ── alarms ──
+  - { id: alarms, type: alarmTable, x: 16, y: 638, w: 1064, h: 248, props: { area: Plant, maxRows: 8 } }
+
+  # ── operator controls ──
+  - { id: lblCtl, type: text, x: 1106, y: 644, w: 300, h: 24, props: { text: 'OPERATOR CONTROLS', fontSize: 12, fontWeight: '700', color: '#64748b' } }
+  - { id: swP1, type: switch, x: 1106, y: 674, w: 160, h: 30, props: { tag: Plant/Area1/Tank1/Pump/Running, label: P-101 run } }
+  - { id: swP2, type: switch, x: 1276, y: 674, w: 160, h: 30, props: { tag: Plant/Area1/Tank2/Pump/Running, label: P-102 run } }
+  - { id: ddMode1, type: dropdown, x: 1106, y: 712, w: 160, h: 32, props: { tag: Plant/Area1/Tank1/Mode, options: 'Auto:T-101 Auto,Manual:T-101 Manual' } }
+  - { id: sp1, type: numeric, x: 1276, y: 712, w: 160, h: 32, props: { tag: Plant/Area1/Tank1/Setpoint, label: SP, unit: '%' } }
+  - { id: sl1, type: slider, x: 1106, y: 752, w: 330, h: 36, props: { tag: Plant/Area1/Tank1/Pump/Speed, color: '#38bdf8' } }
+  - { id: estop, type: button, x: 1452, y: 674, w: 118, h: 70, props: { text: E-STOP, action: toggle, tag: Plant/Area1/EmergencyStop, color: '#b91c1c', activeColor: '#450a0a', confirm: true, confirmText: 'Toggle EMERGENCY STOP for Area 1?', fontSize: 18 } }
+  - { id: btnRecipe, type: button, x: 1452, y: 752, w: 118, h: 36, props: { text: Recipe ▸, action: none, color: '#334155' }, events: { click: "const r = await ui.prompt('Load recipe set (Normal / HighThroughput / Maintenance):', 'Normal');\nif (r) { await recipes.load('TankOperation', r); ui.toast(`Recipe ${r} loaded`, 'success'); }" } }
+  - { id: btnHome, type: button, x: 1106, y: 804, w: 150, h: 36, props: { text: '🏠 Smart home', action: navigate, target: Home/Dashboard, color: '#0f766e' } }
+  - { id: btn3d, type: button, x: 1266, y: 804, w: 150, h: 36, props: { text: '🧊 3D view', action: scene, target: Plant/Area1, color: '#7c3aed' } }
+  - { id: btnFp, type: button, x: 1426, y: 804, w: 144, h: 36, props: { text: Area faceplate, action: faceplate, target: Plant/Area1, color: '#334155' } }
+  - { id: msg, type: value, x: 1106, y: 848, w: 464, h: 30, props: { tag: System/Message, fontSize: 12, align: left, color: '#94a3b8' } }

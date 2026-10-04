@@ -1,0 +1,78 @@
+name: Home/Dashboard
+title: Smart Home
+kind: page
+width: 1600
+height: 900
+background: '#0c1520'
+grid: 10
+scripts:
+  timerMs: 2000
+  onTimer: |
+    const solar: number = tags.get('Home/Sensors/SolarPower') ?? 0;
+    const load: number = tags.get('Home/Sensors/Power') ?? 0;
+    display.element('energyText')?.set('text',
+      solar > load ? `☀ Exporting ${(solar - load).toFixed(0)} W to the grid` : `⚡ Importing ${(load - solar).toFixed(0)} W from the grid`);
+elements:
+  - { id: title, type: text, x: 24, y: 12, w: 500, h: 40, props: { text: 'Smart Home', fontSize: 26, fontWeight: '700' } }
+  - { id: energyText, type: text, x: 540, y: 18, w: 600, h: 30, props: { text: '', fontSize: 15, color: '#fde68a' } }
+  - { id: clock, type: clock, x: 1400, y: 16, w: 180, h: 32, props: { format: datetime, fontSize: 14, color: '#94a3b8' } }
+  - { id: bg1, type: rect, x: 16, y: 60, w: 1568, h: 270, locked: true, props: { fill: '#111b27', stroke: '#233244', radius: 12 } }
+  - { id: bg2, type: rect, x: 16, y: 342, w: 1568, h: 200, locked: true, props: { fill: '#111b27', stroke: '#233244', radius: 12 } }
+
+  # climate
+  - { id: house, type: house, x: 36, y: 76, w: 200, h: 190, props: { color: '#38bdf8' }, bindings: { lit: { tag: Home/Devices/LivingRoomLight } }, faceplate: { path: Home/Devices } }
+  - id: thermo
+    type: thermostat
+    x: 260
+    y: 76
+    w: 190
+    h: 190
+    props: {}
+    bindings:
+      value: { tag: Home/Sensors/LivingRoomTemp }
+      setpoint: { tag: Home/Devices/ThermostatSetpoint }
+      heating: { tag: Home/Devices/Heating }
+  - { id: sp, type: numeric, x: 260, y: 276, w: 190, h: 34, props: { tag: Home/Devices/ThermostatSetpoint, label: Set, unit: °C, step: 0.5 } }
+  - { id: away, type: switch, x: 36, y: 280, w: 200, h: 32, props: { tag: Home/Devices/AwayMode, label: Away mode, onColor: '#a855f7' } }
+
+  # lights
+  - { id: lampLiving, type: lamp, x: 490, y: 80, w: 76, h: 92, props: {}, bindings: { on: { tag: Home/Devices/LivingRoomLight }, brightness: { tag: Home/Devices/LivingRoomDimmer } } }
+  - { id: swLiving, type: switch, x: 476, y: 182, w: 120, h: 30, props: { tag: Home/Devices/LivingRoomLight, label: Living } }
+  - { id: dim, type: slider, x: 476, y: 220, w: 120, h: 30, props: { tag: Home/Devices/LivingRoomDimmer, showValue: false, color: '#fde047' } }
+  - { id: lampKitchen, type: lamp, x: 630, y: 80, w: 76, h: 92, props: {}, bindings: { on: { tag: Home/Devices/KitchenLight } } }
+  - { id: swKitchen, type: switch, x: 616, y: 182, w: 120, h: 30, props: { tag: Home/Devices/KitchenLight, label: Kitchen } }
+  - { id: lampBed, type: lamp, x: 770, y: 80, w: 76, h: 92, props: { onColor: '#fca5a5' }, bindings: { on: { tag: Home/Devices/BedroomLight } } }
+  - { id: swBed, type: switch, x: 756, y: 182, w: 120, h: 30, props: { tag: Home/Devices/BedroomLight, label: Bedroom } }
+  - { id: lampHall, type: lamp, x: 910, y: 80, w: 76, h: 92, props: { onColor: '#a5f3fc' }, bindings: { on: { tag: Home/Devices/HallwayLight } } }
+  - { id: swHall, type: switch, x: 896, y: 182, w: 120, h: 30, props: { tag: Home/Devices/HallwayLight, label: Hallway } }
+  - { id: motion, type: led, x: 896, y: 220, w: 140, h: 28, props: { tag: Home/Sensors/HallwayMotion, label: Motion, onColor: '#38bdf8', blinkWhenOn: true } }
+  - { id: allOff, type: button, x: 476, y: 266, w: 260, h: 40, props: { text: 'All lights off', color: '#334155' }, events: { click: "await tags.writeMany({ 'Home/Devices/LivingRoomLight': false, 'Home/Devices/KitchenLight': false, 'Home/Devices/BedroomLight': false, 'Home/Devices/HallwayLight': false });\nui.toast('All lights switched off', 'success');" } }
+  - { id: scene, type: button, x: 756, y: 266, w: 260, h: 40, props: { text: '🎬 Movie scene', color: '#7c3aed' }, events: { click: "await tags.writeMany({ 'Home/Devices/LivingRoomLight': true, 'Home/Devices/LivingRoomDimmer': 20, 'Home/Devices/KitchenLight': false, 'Home/Devices/HallwayLight': false });\nui.toast('Movie scene activated 🍿');" } }
+
+  # security
+  - { id: door, type: door, x: 1070, y: 80, w: 70, h: 104, props: {}, bindings: { open: { tag: Home/Sensors/FrontDoorOpen } }, tooltip: Front door }
+  - { id: lblDoor, type: text, x: 1056, y: 188, w: 100, h: 20, props: { text: Front door, fontSize: 11, align: center, color: '#94a3b8' } }
+  - { id: garage, type: door, x: 1180, y: 80, w: 70, h: 104, props: { openColor: '#f97316' }, bindings: { open: { tag: Home/Devices/GarageDoor } } }
+  - { id: btnGarage, type: button, x: 1166, y: 188, w: 100, h: 30, props: { text: Garage, action: toggle, tag: Home/Devices/GarageDoor, color: '#334155', activeColor: '#c2410c', confirm: true } }
+  - { id: leak, type: beacon, x: 1310, y: 84, w: 70, h: 70, props: { color: '#3b82f6' }, bindings: { active: { tag: Home/Sensors/WaterLeak } } }
+  - { id: btnLeak, type: button, x: 1290, y: 160, w: 120, h: 30, props: { text: Test leak, action: toggle, tag: Home/Sensors/WaterLeak, color: '#1e3a8a', activeColor: '#dc2626' } }
+  - { id: lblLeak, type: text, x: 1290, y: 194, w: 120, h: 20, props: { text: Water leak, fontSize: 11, align: center, color: '#94a3b8' } }
+  - { id: plug, type: plug, x: 1440, y: 84, w: 70, h: 70, props: {}, bindings: { on: { tag: Home/Devices/Heating } }, tooltip: Boiler relay }
+  - { id: lblPlug, type: text, x: 1420, y: 160, w: 110, h: 20, props: { text: Boiler relay, fontSize: 11, align: center, color: '#94a3b8' } }
+  - { id: humidity, type: value, x: 1070, y: 240, w: 240, h: 34, props: { tag: Home/Sensors/LivingRoomHumidity, label: Humidity, align: left, fontSize: 15 } }
+  - { id: outdoor, type: value, x: 1320, y: 240, w: 240, h: 34, props: { tag: Home/Sensors/OutdoorTemp, label: Outdoor, align: left, fontSize: 15 } }
+  - { id: selfc, type: progress, x: 1070, y: 286, w: 490, h: 22, props: { tag: Home/Devices/SelfConsumption, color: '#eab308' } }
+
+  # energy
+  - { id: solar, type: solar, x: 36, y: 360, w: 180, h: 150, props: {}, bindings: { power: { tag: Home/Sensors/SolarPower } } }
+  - { id: battery, type: battery, x: 236, y: 372, w: 70, h: 130, props: {}, bindings: { level: { tag: Home/Sensors/BatteryLevel } } }
+  - { id: gPower, type: gauge, x: 330, y: 356, w: 190, h: 172, props: { tag: Home/Sensors/Power, min: 0, max: 5000, label: Load, decimals: 0, zones: '0:#22c55e,3000:#f59e0b,4000:#ef4444' } }
+  - { id: gSelf, type: gauge, x: 530, y: 356, w: 190, h: 172, props: { tag: Home/Devices/SelfConsumption, min: 0, max: 100, label: Solar share, decimals: 0, color: '#eab308', zones: '0:#ef4444,30:#f59e0b,70:#22c55e' } }
+  - { id: bars, type: barChart, x: 740, y: 356, w: 380, h: 172, props: { tags: 'Home/Sensors/LivingRoomTemp,Home/Sensors/OutdoorTemp,Home/Devices/ThermostatSetpoint', labels: 'Inside °C,Outside °C,Setpoint °C', max: 30, decimals: 1, color: '#0ea5e9' } }
+  - { id: sparkPower, type: sparkline, x: 1140, y: 366, w: 430, h: 70, props: { tag: Home/Sensors/Power, color: '#f97316', decimals: 0 } }
+  - { id: sparkSolar, type: sparkline, x: 1140, y: 446, w: 430, h: 70, props: { tag: Home/Sensors/SolarPower, color: '#eab308', decimals: 0 } }
+
+  # bottom row
+  - { id: trend, type: trend, x: 16, y: 556, w: 540, h: 330, props: { tags: 'Home/Sensors/Power,Home/Sensors/SolarPower', minutes: 15, legend: true } }
+  - { id: house3d, type: scene3d, x: 570, y: 556, w: 520, h: 330, props: { scene: Home/House, autoRotate: true } }
+  - { id: alarms, type: alarmTable, x: 1104, y: 556, w: 480, h: 330, props: { area: Home, maxRows: 10 } }

@@ -1,0 +1,334 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  Nexus SCADA — project configuration (configuration as code)
+#
+#  Everything in the runtime is defined here or in the sibling folders:
+#    displays/  graphic pages & faceplates     scenes/   3D scenes
+#    scripts/   server scripts (TypeScript)     .history/ automatic backups
+#
+#  Edit in the app (Config page / Tags page) or any text editor — changes hot-reload.
+#  Tag paths follow the tree: Folder/Device/Folder/Tag, e.g. Plant/Area1/Tank1/Level
+# ─────────────────────────────────────────────────────────────────────────────
+
+project:
+  name: Nexus Demo Plant & Smart Home
+  description: Water treatment area with two tanks plus a connected home (IoT)
+  version: 1.0.0
+
+server:
+  port: 8080
+  anonymousRole: viewer        # remove (or set null) to require login for viewing
+  tokenTtlHours: 12
+  historianRetentionDays: 30
+
+location: { lat: 35.6892, lng: 51.389 }   # used for @sunrise / @sunset schedules
+startDisplay: Plant/Overview
+
+users:
+  - { username: admin, fullName: Administrator, role: admin, password: admin }
+  - { username: engineer, fullName: Process Engineer, role: engineer, password: engineer }
+  - { username: operator, fullName: Shift Operator, role: operator, password: operator }
+  # Production: npm run hash-password -w server -- <password>   →  passwordHash: scrypt$...
+
+nodes:
+  # ═══════════════════════════ INDUSTRIAL PLANT ═══════════════════════════
+  - kind: folder
+    name: Plant
+    description: Water treatment plant
+    children:
+      - kind: device
+        name: Area1
+        driver: simulation
+        description: Process simulator (replace with modbus-tcp / mqtt / rest for real equipment)
+        settings: { intervalMs: 500 }
+        children:
+          - kind: folder
+            name: Tank1
+            description: Raw water tank T-101
+            children:
+              - kind: tag
+                name: Level
+                unit: '%'
+                min: 0
+                max: 100
+                decimals: 1
+                initial: 42
+                writable: true
+                writeRole: engineer
+                description: Tank level (integrated by the ProcessModel script)
+                history: { deadband: 0.2, interval: 30 }
+                alarms:
+                  - { kind: hihi, limit: 95, severity: critical, message: 'T-101 level extremely high ({value}%)' }
+                  - { kind: hi, limit: 85, severity: high, deadband: 1, message: 'T-101 level high ({value}%)' }
+                  - { kind: lo, limit: 15, severity: high, deadband: 1, message: 'T-101 level low ({value}%)' }
+                  - { kind: lolo, limit: 5, severity: critical, message: 'T-101 level extremely low ({value}%)' }
+              - kind: tag
+                name: Temperature
+                unit: °C
+                decimals: 1
+                source: { fn: sine, min: 18, max: 34, period: 240, noise: 0.2 }
+                history: { deadband: 0.1 }
+                alarms:
+                  - { kind: hi, limit: 33, severity: medium, delay: 5, message: 'T-101 water temperature high' }
+              - { kind: tag, name: Setpoint, unit: '%', min: 10, max: 90, initial: 60, writable: true, history: true, description: Level setpoint (auto mode) }
+              - { kind: tag, name: Mode, dataType: string, initial: Auto, writable: true, states: { Auto: Automatic, Manual: Manual } }
+              - { kind: tag, name: InletValve, dataType: boolean, initial: true, writable: true, history: true, description: XV-101 inlet valve }
+              - kind: folder
+                name: Pump
+                children:
+                  - { kind: tag, name: Running, dataType: boolean, initial: true, writable: true, history: true, states: { 'false': Stopped, 'true': Running } }
+                  - { kind: tag, name: Speed, unit: '%', min: 0, max: 100, initial: 50, writable: true, history: true }
+                  - kind: tag
+                    name: Current
+                    unit: A
+                    decimals: 1
+                    expression: "tag('./Running') ? 4 + tag('./Speed') * 0.18 : 0"
+                    history: true
+                    alarms:
+                      - { kind: hi, limit: 20, severity: high, message: 'P-101 motor overload ({value} A)' }
+          - kind: folder
+            name: Tank2
+            description: Treated water tank T-102
+            children:
+              - kind: tag
+                name: Level
+                unit: '%'
+                min: 0
+                max: 100
+                decimals: 1
+                initial: 70
+                writable: true
+                writeRole: engineer
+                history: { deadband: 0.2, interval: 30 }
+                alarms:
+                  - { kind: hi, limit: 90, severity: high, message: 'T-102 level high ({value}%)' }
+                  - { kind: lo, limit: 10, severity: high, message: 'T-102 level low ({value}%)' }
+              - kind: tag
+                name: Temperature
+                unit: °C
+                decimals: 1
+                source: { fn: sine, min: 16, max: 26, period: 400, phase: 1.2, noise: 0.15 }
+                history: true
+              - { kind: tag, name: Setpoint, unit: '%', min: 10, max: 90, initial: 50, writable: true, history: true }
+              - { kind: tag, name: Mode, dataType: string, initial: Manual, writable: true }
+              - { kind: tag, name: InletValve, dataType: boolean, initial: false, writable: true, history: true }
+              - kind: folder
+                name: Pump
+                children:
+                  - { kind: tag, name: Running, dataType: boolean, initial: false, writable: true, history: true }
+                  - { kind: tag, name: Speed, unit: '%', min: 0, max: 100, initial: 35, writable: true, history: true }
+                  - { kind: tag, name: Current, unit: A, decimals: 1, expression: "tag('./Running') ? 4 + tag('./Speed') * 0.18 : 0" }
+          - kind: tag
+            name: Pressure
+            unit: bar
+            decimals: 2
+            source: { fn: randomWalk, min: 2, max: 8, step: 0.15 }
+            history: { deadband: 0.02 }
+            alarms:
+              - { kind: hi, limit: 7.5, severity: high, delay: 3, deadband: 0.2, message: 'Header pressure high ({value} bar)' }
+          - kind: tag
+            name: Flow
+            unit: m³/h
+            decimals: 1
+            description: Total outflow
+            expression: "(tag('./Tank1/Pump/Running') ? tag('./Tank1/Pump/Speed') * 1.2 : 0) + (tag('./Tank2/Pump/Running') ? tag('./Tank2/Pump/Speed') * 1.2 : 0)"
+            history: true
+          - kind: tag
+            name: Vibration
+            unit: mm/s
+            decimals: 2
+            source: { fn: sine, min: 0.5, max: 9.6, period: 300, noise: 0.15 }
+            history: true
+            alarms:
+              - { kind: hi, limit: 9, severity: medium, delay: 2, message: 'Blower vibration high ({value} mm/s)' }
+          - { kind: tag, name: BlowerRunning, dataType: boolean, initial: true, writable: true }
+          - { kind: tag, name: ProductionCount, source: { fn: counter, step: 1, min: 0, max: 1000000 }, history: { interval: 60 } }
+          - { kind: tag, name: EmergencyStop, dataType: boolean, initial: false, writable: true, writeRole: operator, alarms: [{ kind: on, severity: critical, message: Emergency stop activated }] }
+
+      - kind: device
+        name: Utilities
+        driver: modbus-tcp
+        enabled: false
+        description: Example Modbus TCP PLC (enable and set host to your PLC)
+        settings: { host: 192.168.1.50, port: 502, unitId: 1, pollMs: 1000 }
+        children:
+          - { kind: tag, name: CompressorPressure, unit: bar, source: { area: holding, address: 0, type: float32 }, history: true }
+          - { kind: tag, name: CompressorRunning, dataType: boolean, writable: true, source: { area: coil, address: 0 } }
+          - { kind: tag, name: Hours, source: { area: input, address: 10, type: uint32 } }
+          - { kind: tag, name: TankTemp, unit: °C, source: { area: holding, address: 4, type: int16, scale: 0.1 } }
+
+  # ═══════════════════════════ SMART HOME (IoT) ═══════════════════════════
+  - kind: folder
+    name: Home
+    description: Connected home
+    children:
+      - kind: device
+        name: Sensors
+        driver: simulation
+        settings: { intervalMs: 1000 }
+        children:
+          - { kind: tag, name: LivingRoomTemp, unit: °C, decimals: 1, source: { fn: sine, min: 18.5, max: 23.5, period: 900, noise: 0.05 }, history: true }
+          - { kind: tag, name: LivingRoomHumidity, unit: '%', decimals: 0, source: { fn: randomWalk, min: 35, max: 60, step: 0.5 }, history: true }
+          - { kind: tag, name: OutdoorTemp, unit: °C, decimals: 1, source: { fn: sine, min: 6, max: 17, period: 1800 }, history: true }
+          - kind: tag
+            name: Power
+            unit: W
+            decimals: 0
+            source: { fn: randomWalk, min: 150, max: 4200, step: 120 }
+            history: { deadband: 20 }
+            alarms: [{ kind: hi, limit: 4000, severity: medium, delay: 10, message: 'House power demand high ({value} W)' }]
+          - { kind: tag, name: SolarPower, unit: W, decimals: 0, source: { fn: sine, min: 0, max: 3200, period: 1200 }, history: true }
+          - { kind: tag, name: BatteryLevel, unit: '%', decimals: 0, source: { fn: triangle, min: 20, max: 100, period: 1800 }, history: true }
+          - { kind: tag, name: FrontDoorOpen, dataType: boolean, source: { fn: toggle, period: 240 }, alarms: [{ kind: on, severity: low, delay: 60, message: Front door open for over a minute }] }
+          - { kind: tag, name: HallwayMotion, dataType: boolean, source: { fn: toggle, period: 47 } }
+          - { kind: tag, name: WaterLeak, dataType: boolean, initial: false, writable: true, alarms: [{ kind: on, severity: critical, message: Water leak detected! }] }
+
+      - kind: device
+        name: Devices
+        driver: memory
+        description: Virtual devices (replace by MQTT / REST tags for real hardware)
+        children:
+          - { kind: tag, name: LivingRoomLight, dataType: boolean, writable: true, history: true }
+          - { kind: tag, name: LivingRoomDimmer, unit: '%', min: 0, max: 100, initial: 70, writable: true }
+          - { kind: tag, name: KitchenLight, dataType: boolean, writable: true, history: true }
+          - { kind: tag, name: BedroomLight, dataType: boolean, writable: true }
+          - { kind: tag, name: HallwayLight, dataType: boolean, writable: true }
+          - { kind: tag, name: GarageDoor, dataType: boolean, writable: true }
+          - { kind: tag, name: AwayMode, dataType: boolean, writable: true }
+          - { kind: tag, name: ThermostatSetpoint, unit: °C, min: 12, max: 28, initial: 21, decimals: 1, writable: true, history: true }
+          - { kind: tag, name: Heating, dataType: boolean, writable: true, history: true, description: Boiler demand (driven by the Thermostat script) }
+          - { kind: tag, name: SelfConsumption, unit: '%', decimals: 0, expression: "Math.min(100, tag('Home/Sensors/SolarPower') / Math.max(1, tag('Home/Sensors/Power')) * 100)" }
+
+      - kind: device
+        name: Zigbee
+        driver: mqtt
+        enabled: false
+        description: Zigbee2MQTT / Tasmota / Shelly via an MQTT broker (enable and set url)
+        settings: { url: 'mqtt://localhost:1883', clientId: nexus-scada }
+        children:
+          - { kind: tag, name: DeskLamp, dataType: boolean, writable: true, source: { topic: zigbee2mqtt/desk_lamp, path: state, onValue: 'ON', offValue: 'OFF', writeTopic: zigbee2mqtt/desk_lamp/set, writeTemplate: '{"state":"{{value}}"}' } }
+          - { kind: tag, name: DeskLampBrightness, min: 0, max: 254, writable: true, source: { topic: zigbee2mqtt/desk_lamp, path: brightness, writeTopic: zigbee2mqtt/desk_lamp/set, writeTemplate: '{"brightness":{{value}}}' } }
+          - { kind: tag, name: TasmotaPlug, dataType: boolean, writable: true, source: { topic: stat/plug1/POWER, onValue: 'ON', offValue: 'OFF', writeTopic: cmnd/plug1/POWER } }
+          - { kind: tag, name: BedroomTemp, unit: °C, source: { topic: zigbee2mqtt/bedroom_sensor, path: temperature }, history: true }
+
+      - kind: device
+        name: HomeAssistant
+        driver: rest
+        enabled: false
+        description: Home Assistant REST API (enable, set token)
+        settings:
+          baseUrl: http://homeassistant.local:8123
+          pollMs: 5000
+          headers: { Authorization: Bearer YOUR_LONG_LIVED_TOKEN }
+        children:
+          - { kind: tag, name: OutsideHumidity, unit: '%', source: { path: /api/states/sensor.outside_humidity, jsonPath: state } }
+          - kind: tag
+            name: PorchLight
+            dataType: boolean
+            writable: true
+            source:
+              path: /api/states/light.porch
+              jsonPath: state
+              writeOn: { method: POST, path: /api/services/light/turn_on, body: '{"entity_id":"light.porch"}' }
+              writeOff: { method: POST, path: /api/services/light/turn_off, body: '{"entity_id":"light.porch"}' }
+
+  # ═══════════════════════════ SYSTEM ═══════════════════════════
+  - kind: folder
+    name: System
+    children:
+      - kind: device
+        name: Stats
+        driver: sql
+        settings: { pollMs: 5000 }
+        children:
+          - { kind: tag, name: AlarmEvents24h, source: { query: "SELECT count(*) FROM alarm_events WHERE ts > (strftime('%s','now') - 86400) * 1000" } }
+          - { kind: tag, name: HistorySamples, source: { query: 'SELECT count(*) FROM history' } }
+          - { kind: tag, name: AuditEntries, source: { query: 'SELECT count(*) FROM audit' } }
+      - { kind: tag, name: Message, dataType: string, initial: Welcome to Nexus SCADA, writable: true }
+      - { kind: tag, name: Heartbeat, dataType: number, initial: 0, writable: true }
+
+# ─────────────────────────── Server scripts (TypeScript) ───────────────────────────
+scripts:
+  - name: Startup
+    file: Startup.ts
+    description: Runs once when the runtime starts
+    triggers: [{ type: startup }]
+  - name: ProcessModel
+    file: ProcessModel.ts
+    description: Mass-balance model that fills/drains the tanks
+    triggers: [{ type: interval, ms: 500 }]
+  - name: TankControl
+    file: TankControl.ts
+    description: Automatic level control for tanks in Auto mode
+    triggers: [{ type: tagChange, tags: [Plant/Area1/Tank1/Level, Plant/Area1/Tank2/Level, Plant/Area1/Tank1/Mode, Plant/Area1/Tank2/Mode] }]
+  - name: Interlocks
+    file: Interlocks.ts
+    description: Safety interlocks (emergency stop, dry-run protection)
+    triggers: [{ type: tagChange, tags: ['Plant/Area1/*'] }]
+  - name: Thermostat
+    file: Thermostat.ts
+    description: Home heating control with away mode
+    triggers: [{ type: interval, ms: 5000 }, { type: tagChange, tags: [Home/Devices/ThermostatSetpoint, Home/Devices/AwayMode] }]
+  - name: MotionLight
+    file: MotionLight.ts
+    description: Hallway light follows motion with a 60 s off-delay
+    triggers: [{ type: tagChange, tags: [Home/Sensors/HallwayMotion] }, { type: interval, ms: 5000 }]
+  - name: AlarmNotifier
+    file: AlarmNotifier.ts
+    description: Push critical alarms to phones
+    triggers: [{ type: alarm, minSeverity: critical }]
+  - name: HourlyReport
+    file: HourlyReport.ts
+    description: Hourly KPI report stored in the database
+    triggers: [{ type: cron, cron: '0 * * * *' }, { type: manual }]
+
+# ─────────────────────────── Schedules (cron, @every, @sunrise/@sunset ± offset) ───────────────────────────
+schedules:
+  - name: EveningLights
+    cron: '@sunset-15m'
+    description: Living room light on shortly before sunset
+    actions: [{ write: Home/Devices/LivingRoomLight, value: true }]
+  - name: NightOff
+    cron: '30 23 * * *'
+    actions:
+      - { write: Home/Devices/LivingRoomLight, value: false }
+      - { write: Home/Devices/KitchenLight, value: false }
+      - { write: Home/Devices/BedroomLight, value: false }
+  - name: WeekdayMorningHeat
+    cron: '0 6 * * 1-5'
+    actions: [{ write: Home/Devices/ThermostatSetpoint, value: 21.5 }]
+  - name: Heartbeat
+    cron: '@every 10s'
+    actions: [{ script: HourlyReport }]
+    enabled: false
+
+# ─────────────────────────── Recipes ───────────────────────────
+recipes:
+  - name: TankOperation
+    description: Setpoints and pump speeds for both tanks
+    tags:
+      - Plant/Area1/Tank1/Setpoint
+      - Plant/Area1/Tank2/Setpoint
+      - Plant/Area1/Tank1/Pump/Speed
+      - Plant/Area1/Tank2/Pump/Speed
+    sets:
+      Normal: { Plant/Area1/Tank1/Setpoint: 60, Plant/Area1/Tank2/Setpoint: 50, Plant/Area1/Tank1/Pump/Speed: 50, Plant/Area1/Tank2/Pump/Speed: 35 }
+      HighThroughput: { Plant/Area1/Tank1/Setpoint: 75, Plant/Area1/Tank2/Setpoint: 70, Plant/Area1/Tank1/Pump/Speed: 65, Plant/Area1/Tank2/Pump/Speed: 60 }
+      Maintenance: { Plant/Area1/Tank1/Setpoint: 30, Plant/Area1/Tank2/Setpoint: 30, Plant/Area1/Tank1/Pump/Speed: 20, Plant/Area1/Tank2/Pump/Speed: 20 }
+
+# ─────────────────────────── Notifications ───────────────────────────
+notifications:
+  - { name: phone, type: ntfy, url: 'https://ntfy.sh/nexus-scada-demo-change-me', minSeverity: critical, enabled: false }
+  # - { name: telegram, type: telegram, token: '123:ABC', chatId: '42', minSeverity: high }
+  # - { name: ops, type: slack, url: 'https://hooks.slack.com/services/...', minSeverity: high }
+
+# ─────────────────────────── GIS map ───────────────────────────
+map:
+  center: [35.7, 51.39]
+  zoom: 11
+  tileUrl: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+  attribution: '© OpenStreetMap contributors'
+  markers:
+    - { id: plant, name: Water Treatment Plant, lat: 35.7219, lng: 51.3347, path: Plant/Area1, icon: factory, display: Plant/Overview, tags: [Plant/Area1/Tank1/Level, Plant/Area1/Flow, Plant/Area1/Pressure] }
+    - { id: home, name: Smart Home, lat: 35.7575, lng: 51.4102, path: Home, icon: home, display: Home/Dashboard, tags: [Home/Sensors/LivingRoomTemp, Home/Sensors/Power, Home/Sensors/SolarPower] }
+    - { id: reservoir, name: Treated Water Reservoir, lat: 35.6731, lng: 51.4410, path: Plant/Area1/Tank2, icon: tank, tags: [Plant/Area1/Tank2/Level, Plant/Area1/Tank2/Temperature] }
+    - { id: pumpstation, name: Remote Pump Station, lat: 35.6420, lng: 51.3200, path: Plant/Utilities, icon: pump, tags: [Plant/Utilities/CompressorPressure] }

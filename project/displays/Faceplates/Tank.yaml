@@ -1,0 +1,21 @@
+name: Faceplates/Tank
+title: Tank faceplate (template)
+kind: faceplate
+width: 520
+height: 400
+background: '#111b27'
+grid: 10
+params: [path]
+elements:
+  - { id: title, type: text, x: 16, y: 8, w: 488, h: 30, props: { text: '{$path}', fontSize: 16, fontWeight: '700', mono: true } }
+  - { id: tank, type: tank, x: 20, y: 46, w: 110, h: 220, props: { fillColor: '#38bdf8' }, bindings: { level: { tag: '{$path}/Level' } } }
+  - { id: lvl, type: value, x: 146, y: 46, w: 176, h: 34, props: { tag: '{$path}/Level', label: Level, align: left } }
+  - { id: tmp, type: value, x: 146, y: 86, w: 176, h: 34, props: { tag: '{$path}/Temperature', label: Temp, align: left } }
+  - { id: mode, type: dropdown, x: 146, y: 128, w: 176, h: 32, props: { tag: '{$path}/Mode', options: 'Auto,Manual' } }
+  - { id: sp, type: numeric, x: 146, y: 168, w: 176, h: 32, props: { tag: '{$path}/Setpoint', label: SP, unit: '%' } }
+  - { id: alarmLed, type: led, x: 146, y: 210, w: 176, h: 28, props: { label: Level alarm, onColor: '#ef4444', blinkWhenOn: true }, bindings: { value: { tag: '{$path}/Level', expr: 'value >= 85 || value <= 15' } } }
+  - { id: inlet, type: switch, x: 338, y: 46, w: 170, h: 32, props: { tag: '{$path}/InletValve', label: Inlet valve } }
+  - { id: pump, type: switch, x: 338, y: 86, w: 170, h: 32, props: { tag: '{$path}/Pump/Running', label: Pump } }
+  - { id: speed, type: slider, x: 338, y: 128, w: 170, h: 32, props: { tag: '{$path}/Pump/Speed' } }
+  - { id: cur, type: value, x: 338, y: 168, w: 170, h: 32, props: { tag: '{$path}/Pump/Current', label: Current, align: left } }
+  - { id: trend, type: trend, x: 16, y: 278, w: 488, h: 112, props: { tags: '{$path}/Level,{$path}/Setpoint', minutes: 10 } }

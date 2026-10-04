@@ -1,0 +1,15 @@
+name: Home/House
+title: Smart Home — 3D
+environment: sunset
+grid: false
+shadows: true
+camera: { position: [5, 3.5, 6], target: [0, 1, 0], fov: 45 }
+objects:
+  - { id: lawn, type: plane, name: Lawn, position: [0, 0, 0], rotation: [0, 0, 0], scale: [14, 1, 14], props: { color: '#166534', roughness: 1 } }
+  - { id: house, type: house, name: House, position: [0, 0, 0], rotation: [0, 0, 0], scale: [1.5, 1.5, 1.5], props: { color: '#e2e8f0', roofColor: '#9a3412' }, bindings: { lit: { tag: Home/Devices/LivingRoomLight } }, faceplate: { path: Home/Devices } }
+  - { id: pv, type: box, name: Solar array, position: [0, 2.15, 0.62], rotation: [0.62, 0, 0], scale: [1.8, 0.04, 0.8], props: { color: '#1e3a8a', metalness: 0.8, roughness: 0.2 }, bindings: { glow: { tag: Home/Sensors/SolarPower, expr: 'value > 1500' } }, faceplate: { path: Home/Sensors/SolarPower } }
+  - { id: porch, type: lamp, name: Porch light, position: [0.9, 1.2, 1.35], rotation: [0, 0, 0], scale: [0.6, 0.6, 0.6], props: { color: '#fde68a', intensity: 3 }, bindings: { on: { tag: Home/Devices/HallwayLight } } }
+  - { id: battery, type: tank, name: Battery, position: [-2.6, 0.83, 0.4], rotation: [0, 0, 0], scale: [0.5, 0.5, 0.5], props: { fillColor: '#22c55e', showLabel: true, text: Battery, labelHeight: 2.2 }, bindings: { level: { tag: Home/Sensors/BatteryLevel } }, faceplate: { path: Home/Sensors/BatteryLevel } }
+  - { id: temp, type: label, name: Living room, position: [0, 2.9, 0], rotation: [0, 0, 0], scale: [1, 1, 1], props: { text: Living room }, bindings: { value: { tag: Home/Sensors/LivingRoomTemp, expr: "value.toFixed(1) + ' °C'" } } }
+  - { id: tree1, type: cone, name: Tree, position: [2.8, 1, -1.5], rotation: [0, 0, 0], scale: [1, 2, 1], props: { color: '#15803d' } }
+  - { id: trunk1, type: cylinder, name: Trunk, position: [2.8, 0.15, -1.5], rotation: [0, 0, 0], scale: [0.2, 0.3, 0.2], props: { color: '#78350f' } }
