@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Sidebar } from '../components/Sidebar.tsx';
 import { GitCompare, RefreshCw, RotateCcw, Save } from 'lucide-react';
 import { Modal } from '../components/Overlays.tsx';
 import { CodeEditor, DiffEditor } from '../editor/LazyMonaco.tsx';
@@ -62,7 +63,7 @@ export function ConfigPage() {
           <CodeEditor value={text} onChange={(v) => { setText(v); setDirty(true); }} language="yaml" path="project.yaml" onSave={() => void save()} />
         </div>
       </main>
-      <aside className="sidebar right">
+      <Sidebar side="right">
         <div className="sidebar-head"><span>Revisions</span></div>
         <div className="sidebar-scroll">
           {revisions.map((r) => (
@@ -74,7 +75,7 @@ export function ConfigPage() {
           ))}
           {!revisions.length && <div className="tree-empty">No revisions yet — every save creates one.</div>}
         </div>
-      </aside>
+      </Sidebar>
       {diff && (
         <Modal title={`Revision ${diff.id} ↔ current`} onClose={() => setDiff(null)} width="min(1300px, 96vw)"
           footer={<><span className="spacer" /><button onClick={() => setDiff(null)}>Close</button><button className="danger" onClick={() => void restore(diff.id)}>Restore this revision</button></>}>

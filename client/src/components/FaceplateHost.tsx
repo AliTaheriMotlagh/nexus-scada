@@ -79,7 +79,7 @@ function CustomFaceplate({ display, params }: { display: string; params: Record<
   }, [display]);
   if (error) return <div className="form-error">{error}</div>;
   if (!doc) return <div className="loading">Loading…</div>;
-  return <div style={{ width: doc.width, height: doc.height, maxWidth: '80vw', maxHeight: '70vh' }}><DisplayView doc={doc} params={params} scale="fit" /></div>;
+  return <div className="fp-custom" style={{ width: doc.width, maxWidth: '100%', aspectRatio: `${doc.width} / ${doc.height}`, maxHeight: '70dvh' }}><DisplayView doc={doc} params={params} scale="fit" /></div>;
 }
 
 function FaceplateWindowView({ fp, index }: { fp: FaceplateWindow; index: number }) {
@@ -87,7 +87,7 @@ function FaceplateWindowView({ fp, index }: { fp: FaceplateWindow; index: number
   const [pos, setPos] = useState({ x: 120 + index * 36, y: 90 + index * 30 });
   const drag = useRef<{ dx: number; dy: number } | null>(null);
   return (
-    <div className="faceplate" style={{ left: pos.x, top: pos.y }}>
+    <div className="faceplate" style={{ left: pos.x, top: pos.y, maxWidth: 'calc(100vw - 16px)' }}>
       <div
         className="faceplate-header"
         onPointerDown={(e) => {

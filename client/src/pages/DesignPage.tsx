@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import type { DisplayDoc, TreeItem } from '@shared/types.ts';
 import { Empty, Tabs } from '../components/Overlays.tsx';
+import { Sidebar } from '../components/Sidebar.tsx';
 import { Tree } from '../components/Tree.tsx';
 import { createElement, DesignerCanvas, DND_ELEMENT, DND_TAG } from '../graphics/designer/DesignerCanvas.tsx';
 import { useDesigner } from '../graphics/designer/designerStore.ts';
@@ -113,7 +114,13 @@ export function DesignPage() {
     if (!name || name === useDesigner.getState().name) return;
     setLoading(true);
     api.get<DisplayDoc>(`/displays/${enc(name)}`)
-      .then((d) => useDesigner.getState().load(name, d))
+      .then((d) => {
+        useDesigner.getState().load(name, d);
+        // open "zoomed to fit" so the whole page is visible on tablets and small laptops
+        const vp = document.querySelector('.content-body');
+        const avail = (vp?.clientWidth ?? window.innerWidth) - 90;
+        useDesigner.getState().setZoom(Math.min(1, Math.max(0.2, avail / d.width)));
+      })
       .catch(errorToast)
       .finally(() => setLoading(false));
   }, [route.param]);
@@ -218,7 +225,7 @@ export function DesignPage() {
 
   return (
     <div className="page designer">
-      <aside className="sidebar wide">
+      <Sidebar wide>
         <Tabs value={tab} onChange={setTab} tabs={[
           { id: 'palette', label: 'Palette' }, { id: 'displays', label: 'Displays' }, { id: 'tags', label: 'Tags' }, { id: 'layers', label: 'Layers' },
         ]} />
@@ -228,7 +235,7 @@ export function DesignPage() {
           {tab === 'tags' && <TagsTab />}
           {tab === 'layers' && <Layers />}
         </div>
-      </aside>
+      </Sidebar>
       <main className="content">
         <div className="toolbar designer-toolbar">
           <T icon={<Save size={16} />} title="Save (Ctrl+S)" onClick={() => void save()} active={s.dirty} disabled={!s.doc} />
@@ -255,7 +262,10 @@ export function DesignPage() {
           <T icon={<Ungroup size={16} />} title="Ungroup (Ctrl+Shift+G)" onClick={s.ungroup} disabled={!sel} />
           <span className="sep" />
           <T icon={<ZoomOut size={16} />} title="Zoom out" onClick={() => s.setZoom(s.zoom - 0.1)} />
-          <button className="zoom-label" onClick={() => s.setZoom(1)} title="Reset zoom">{Math.round(s.zoom * 100)}%</button>
+          <button className="zoom-label" title="Fit to screen (click) " onClick={() => {
+            const vp = document.querySelector('.designer-viewport');
+            if (s.doc && vp) s.setZoom(Math.min((vp.clientWidth - 90) / s.doc.width, (vp.clientHeight - 90) / s.doc.height));
+          }}>{Math.round(s.zoom * 100)}%</button>
           <T icon={<ZoomIn size={16} />} title="Zoom in" onClick={() => s.setZoom(s.zoom + 0.1)} />
           <T icon={<Grid3x3 size={16} />} title="Show grid" onClick={() => s.toggle('showGrid')} active={s.showGrid} />
           <T icon={<Magnet size={16} />} title="Snap to grid" onClick={() => s.toggle('snap')} active={s.snap} />
@@ -281,7 +291,7 @@ export function DesignPage() {
           <span className="muted">Arrows nudge · Shift = grid step · Ctrl+D duplicate · Del delete</span>
         </div>
       </main>
-      <aside className="sidebar right">{s.doc && <PropertyPanel />}</aside>
+      <Sidebar side="right">{s.doc && <PropertyPanel />}</Sidebar>
     </div>
   );
 }

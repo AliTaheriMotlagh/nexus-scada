@@ -21,6 +21,9 @@ interface UiState {
   toasts: { id: number; kind: ToastKind; message: string }[];
   dialog: Dialog | null;
   theme: 'dark' | 'light';
+  /** Which sidebar is open as a drawer on small screens */
+  drawer: 'left' | 'right' | null;
+  setDrawer(d: 'left' | 'right' | null): void;
   openFaceplate(path: string, display?: string, params?: Record<string, string>): void;
   closeFaceplate(id: string): void;
   closeAllFaceplates(): void;
@@ -47,6 +50,8 @@ export const useUi = create<UiState>((set, get) => ({
   toasts: [],
   dialog: null,
   theme: initialTheme,
+  drawer: null,
+  setDrawer: (drawer) => set({ drawer }),
   openFaceplate(path, display, params) {
     const existing = get().faceplates.find((f) => f.path === path && f.display === display);
     if (existing) return;

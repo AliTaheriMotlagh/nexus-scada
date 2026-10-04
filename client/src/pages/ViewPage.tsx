@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Maximize2, PanelLeftClose, PanelLeftOpen, PencilRuler, Search } from 'lucide-react';
+
+type Zoom = 'fit' | 'width' | 'none';
+const ZOOM_LABEL: Record<Zoom, string> = { fit: 'Fit', width: 'Width', none: '100%' };
 import type { DisplayDoc } from '@shared/types.ts';
 import { Empty } from '../components/Overlays.tsx';
+import { Sidebar } from '../components/Sidebar.tsx';
 import { Tree } from '../components/Tree.tsx';
 import { DisplayView } from '../graphics/DisplayView.tsx';
 import { api, enc } from '../lib/api.ts';
@@ -33,21 +37,28 @@ export function ViewPage() {
   const canEdit = useHasRole('engineer');
   const [sidebar, setSidebar] = useState(true);
   const [filter, setFilter] = useState('');
+  const [zoom, setZoom] = useState<Zoom>(() => {
+    try { return (localStorage.getItem('nexus.view.zoom') as Zoom) || 'fit'; } catch { return 'fit'; }
+  });
+  const changeZoom = (z: Zoom) => {
+    setZoom(z);
+    try { localStorage.setItem('nexus.view.zoom', z); } catch { /* ignore */ }
+  };
   const queryKey = route.query.toString();
   const params = useMemo(() => Object.fromEntries(new URLSearchParams(queryKey).entries()), [queryKey]);
 
   return (
     <div className="page with-sidebar">
       {sidebar && (
-        <aside className="sidebar">
+        <Sidebar>
           <div className="sidebar-head">
             <span>Displays</span>
-            <button className="icon-btn" onClick={() => setSidebar(false)} title="Hide"><PanelLeftClose size={15} /></button>
+            <button className="icon-btn hide-compact" onClick={() => setSidebar(false)} title="Hide"><PanelLeftClose size={15} /></button>
           </div>
           <div className="search"><Search size={14} /><input placeholder="Filter…" value={filter} onChange={(e) => setFilter(e.target.value)} /></div>
           <Tree items={displays.tree} filter={filter} selected={name} defaultDepth={3}
             onSelect={(it) => { if (!it.children) navigate('view', it.id); }} />
-        </aside>
+        </Sidebar>
       )}
       <main className="content">
         <div className="content-head">
@@ -55,13 +66,18 @@ export function ViewPage() {
           <h2>{doc?.title ?? name ?? 'No display'}</h2>
           <span className="muted small">{name}</span>
           <span className="spacer" />
-          {canEdit && name && <button onClick={() => navigate('design', name)}><PencilRuler size={14} /> Edit</button>}
+          <div className="seg" role="group" aria-label="Zoom">
+            {(Object.keys(ZOOM_LABEL) as Zoom[]).map((z) => (
+              <button key={z} className={zoom === z ? 'active' : ''} onClick={() => changeZoom(z)}>{ZOOM_LABEL[z]}</button>
+            ))}
+          </div>
+          {canEdit && name && <button className="hide-phone" onClick={() => navigate('design', name)}><PencilRuler size={14} /> Edit</button>}
           <button className="icon-btn" title="Full screen" onClick={() => void document.documentElement.requestFullscreen?.()}><Maximize2 size={15} /></button>
         </div>
         <div className="content-body display-body">
           {error && <Empty>{error}</Empty>}
           {!name && <Empty>No displays yet. {canEdit ? 'Create one in the Designer.' : ''}</Empty>}
-          {doc && <DisplayView key={doc.name} doc={doc} params={params} />}
+          {doc && <DisplayView key={doc.name} doc={doc} params={params} scale={zoom} />}
         </div>
       </main>
     </div>

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Sidebar } from '../components/Sidebar.tsx';
 import { Download, Radio, Search, Trash2 } from 'lucide-react';
 import { exportCsv, PEN_COLORS, TrendChart } from '../components/TrendChart.tsx';
 import { pruneTree, Tree } from '../components/Tree.tsx';
@@ -41,7 +42,7 @@ export function TrendsPage() {
 
   return (
     <div className="page with-sidebar">
-      <aside className="sidebar">
+      <Sidebar>
         <div className="sidebar-head"><span>Historized tags</span></div>
         <div className="search"><Search size={14} /><input placeholder="Filter…" value={filter} onChange={(e) => setFilter(e.target.value)} /></div>
         <div className="sidebar-scroll">
@@ -49,7 +50,7 @@ export function TrendsPage() {
             onCheck={(it, on) => update(on ? [...pens, it.id].slice(-10) : pens.filter((p) => p !== it.id))}
             onActivate={(it) => update(pens.includes(it.id) ? pens : [...pens, it.id].slice(-10))} />
         </div>
-      </aside>
+      </Sidebar>
       <main className="content">
         <div className="content-head">
           <h2>Trends</h2>

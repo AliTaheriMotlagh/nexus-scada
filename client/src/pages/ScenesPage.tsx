@@ -3,6 +3,7 @@ import { Copy, FilePlus2, Move3d, Pencil, Plus, Rotate3d, Save, Scale3d, Search,
 import type { SceneDoc, SceneObject, Vec3 } from '@shared/types.ts';
 import { Empty, Tabs } from '../components/Overlays.tsx';
 import { TagPicker } from '../components/TagPicker.tsx';
+import { Sidebar } from '../components/Sidebar.tsx';
 import { Tree } from '../components/Tree.tsx';
 import { api, enc } from '../lib/api.ts';
 import { uid } from '../lib/format.ts';
@@ -152,7 +153,7 @@ export function ScenesPage() {
 
   return (
     <div className="page with-sidebar">
-      <aside className="sidebar">
+      <Sidebar>
         {edit ? (
           <Tabs value={tab} onChange={setTab} tabs={[{ id: 'scenes', label: 'Scenes' }, { id: 'add', label: 'Add object' }]} />
         ) : <div className="sidebar-head"><span>3D Scenes</span>{canEdit && <button className="icon-btn" onClick={() => void create()} title="New scene"><FilePlus2 size={15} /></button>}</div>}
@@ -179,7 +180,7 @@ export function ScenesPage() {
             </div>
           )}
         </div>
-      </aside>
+      </Sidebar>
       <main className="content">
         <div className="content-head">
           <h2>{doc?.title ?? name ?? '3D'}</h2>
@@ -216,9 +217,9 @@ export function ScenesPage() {
         </div>
       </main>
       {edit && sel && (
-        <aside className="sidebar right">
+        <Sidebar side="right">
           <ObjectPanel obj={sel} onChange={(p) => patchObj(sel.id, p)} onDelete={() => { update((d) => ({ ...d, objects: d.objects.filter((o) => o.id !== sel.id) })); setSelected(null); }} />
-        </aside>
+        </Sidebar>
       )}
     </div>
   );

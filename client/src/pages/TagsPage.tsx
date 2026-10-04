@@ -6,6 +6,7 @@ import {
 } from '@shared/types.ts';
 import { Empty } from '../components/Overlays.tsx';
 import { TrendChart } from '../components/TrendChart.tsx';
+import { Sidebar } from '../components/Sidebar.tsx';
 import { Tree } from '../components/Tree.tsx';
 import { writeTag } from '../graphics/elements/controls.tsx';
 import { useTag } from '../hooks/useTags.ts';
@@ -284,7 +285,7 @@ export function TagsPage() {
 
   return (
     <div className="page with-sidebar">
-      <aside className="sidebar wide">
+      <Sidebar wide>
         <div className="sidebar-head">
           <span>Project nodes</span>
           {canEdit && nodes && <>
@@ -300,7 +301,7 @@ export function TagsPage() {
               ? <span className={`dot state-${devices.get(it.id)?.state ?? 'stopped'}`} title={devices.get(it.id)?.state} />
               : null} />
         </div>
-      </aside>
+      </Sidebar>
       <main className="content">
         <div className="content-head">
           <h2>{selected ?? 'Tags'}</h2>

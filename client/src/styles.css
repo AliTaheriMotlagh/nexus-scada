@@ -86,7 +86,7 @@ input.full { width: 100%; }
 .search input { flex: 1; padding: 4px 8px; }
 
 /* ───────────── layout ───────────── */
-.app { display: flex; flex-direction: column; height: 100%; }
+.app { display: flex; flex-direction: column; height: 100%; height: 100dvh; }
 .main { flex: 1; min-height: 0; display: flex; }
 .topbar {
   display: flex; align-items: center; gap: 10px; height: 48px; padding: 0 12px;
@@ -218,9 +218,9 @@ tr:hover td { background: color-mix(in srgb, var(--panel-2) 60%, transparent); }
 
 /* ───────────── displays & elements ───────────── */
 .display-body { overflow: hidden; }
-.display-host { flex: 1; min-height: 0; position: relative; display: flex; align-items: flex-start; justify-content: center; overflow: hidden; height: 100%; }
+.display-host { flex: 1; min-height: 0; position: relative; display: flex; align-items: flex-start; justify-content: flex-start; overflow: hidden; height: 100%; }
 .display-host.scale-none, .display-host.scale-width { overflow: auto; }
-.display-scaler { position: relative; flex-shrink: 0; }
+.display-scaler { position: relative; flex-shrink: 0; margin: 0 auto; }
 .display-canvas { position: absolute; top: 0; left: 0; transform-origin: 0 0; overflow: hidden; box-shadow: 0 0 0 1px var(--border); }
 .el { position: absolute; transform-origin: center; }
 .el-content { position: absolute; inset: 0; }
@@ -431,3 +431,111 @@ td.match { color: var(--ok); font-weight: 700; }
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 6px; border: 2px solid transparent; background-clip: padding-box; }
 ::-webkit-scrollbar-track { background: transparent; }
+
+/* ═════════════════════════ responsive: iPad & phones ═════════════════════════ */
+html { -webkit-text-size-adjust: 100%; }
+button, a, input, select, label { touch-action: manipulation; }
+.design .el, .handle, .faceplate-header { touch-action: none; }
+.topbar { padding-left: max(12px, env(safe-area-inset-left)); padding-right: max(12px, env(safe-area-inset-right)); padding-top: env(safe-area-inset-top); height: calc(48px + env(safe-area-inset-top)); }
+.alarm-bar { padding-left: max(10px, env(safe-area-inset-left)); padding-right: max(10px, env(safe-area-inset-right)); padding-bottom: env(safe-area-inset-bottom); height: calc(38px + env(safe-area-inset-bottom)); }
+.seg { display: inline-flex; }
+.seg button { border-radius: 0; margin-left: -1px; padding: 4px 9px; }
+.seg button:first-child { border-radius: 6px 0 0 6px; margin-left: 0; }
+.seg button:last-child { border-radius: 0 6px 6px 0; }
+
+.menu-btn, .drawer-fab { display: none; }
+.drawer-backdrop { position: fixed; inset: 0; background: rgba(2, 6, 12, .55); z-index: 69; animation: fadein .15s; }
+.drawer-fab {
+  position: fixed; z-index: 75; bottom: calc(52px + env(safe-area-inset-bottom)); width: 48px; height: 48px; border-radius: 50%;
+  align-items: center; justify-content: center; background: var(--accent-2); color: #fff; border: 0; box-shadow: var(--shadow);
+}
+.drawer-fab.left { left: max(14px, env(safe-area-inset-left)); }
+.drawer-fab.right { right: max(14px, env(safe-area-inset-right)); }
+.drawer-fab.active { background: var(--panel-2); color: var(--text); }
+.nav-drawer {
+  position: fixed; top: 0; bottom: 0; left: 0; width: min(300px, 84vw); z-index: 95; background: var(--panel); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; overflow-y: auto; padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) env(safe-area-inset-left);
+  box-shadow: var(--shadow); animation: drawer-in .18s ease-out;
+}
+.nav-drawer + .drawer-backdrop, .topbar .drawer-backdrop { z-index: 94; }
+.nav-drawer-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 14px; font-weight: 700; border-bottom: 1px solid var(--border); }
+.nav-drawer-item { width: 100%; gap: 14px; border: 0; border-radius: 0; background: transparent; padding: 13px 18px; font-size: 15px; color: var(--text); justify-content: flex-start; }
+.nav-drawer-item.active { background: color-mix(in srgb, var(--accent) 16%, transparent); box-shadow: inset 3px 0 0 var(--accent); }
+.nav-drawer-foot { margin-top: auto; padding: 12px; border-top: 1px solid var(--border); }
+@keyframes drawer-in { from { transform: translateX(-100%); } }
+@keyframes fadein { from { opacity: 0; } }
+
+/* sidebars become slide-in drawers */
+@media (max-width: 900px) {
+  .menu-btn { display: inline-flex; color: var(--text); }
+  .nav, .project-name, .clock { display: none; }
+  .drawer-fab { display: inline-flex; }
+  .hide-compact { display: none !important; }
+  .page .sidebar {
+    position: fixed; top: calc(48px + env(safe-area-inset-top)); bottom: calc(38px + env(safe-area-inset-bottom)); left: 0; z-index: 70;
+    width: min(330px, 88vw) !important; transform: translateX(-105%); transition: transform .2s ease; box-shadow: var(--shadow); overflow-y: auto;
+  }
+  .page .sidebar.right { left: auto; right: 0; transform: translateX(105%); }
+  .page .sidebar.open { transform: none; }
+  .script-layout { flex-direction: column; }
+  .script-side { width: auto; border-left: 0; border-top: 1px solid var(--border); max-height: 38%; }
+  .console { height: 140px; }
+  .tag-editor { grid-template-columns: 1fr; }
+  .content-head { padding: 6px 10px; gap: 6px; min-height: 42px; }
+  .content-head h2 { font-size: 14px; }
+  .designer-toolbar { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .designer-toolbar::-webkit-scrollbar { display: none; }
+  .statusbar .muted { display: none; }
+}
+/* the 3-column designer needs more room: drawers below 1280 px (iPad landscape) */
+@media (max-width: 1280px) {
+  .drawer-fab.wide-bp { display: inline-flex; }
+  .page.designer .sidebar {
+    position: fixed; top: calc(48px + env(safe-area-inset-top)); bottom: calc(38px + env(safe-area-inset-bottom)); left: 0; z-index: 70;
+    width: min(330px, 88vw) !important; transform: translateX(-105%); transition: transform .2s ease; box-shadow: var(--shadow); overflow-y: auto;
+  }
+  .page.designer .sidebar.right { left: auto; right: 0; transform: translateX(105%); }
+  .page.designer .sidebar.open { transform: none; }
+}
+
+/* phones */
+@media (max-width: 640px) {
+  .hide-phone { display: none !important; }
+  .topbar { gap: 6px; }
+  .brand > span, .user-name, .conn-text, .demo-badge { display: none; }
+  .form.grid2 { grid-template-columns: 1fr; }
+  .form .span2 { grid-column: auto; }
+  .alarm-bar { gap: 6px; }
+  .alarm-bar > .small, .alarm-bar .alarm-bar-text .muted { display: none; }
+  .alarm-count { min-width: 18px; padding: 1px 3px; }
+  .faceplate {
+    left: 0 !important; right: 0; top: auto !important; bottom: calc(38px + env(safe-area-inset-bottom)); width: 100%;
+    min-width: 0; max-width: 100% !important; max-height: 72dvh; border-radius: 14px 14px 0 0;
+  }
+  .faceplate-generic { min-width: 0; }
+  .fp-table td:nth-child(3) { display: none; }
+  .toast-host { left: 8px; right: 8px; bottom: calc(110px + env(safe-area-inset-bottom)); }
+  .toast { max-width: none; }
+  .modal-backdrop { align-items: end; }
+  .modal { width: 100% !important; max-width: 100vw; max-height: 92dvh; border-radius: 14px 14px 0 0; }
+  .device-grid { grid-template-columns: 1fr; }
+  .tabs { overflow-x: auto; scrollbar-width: none; }
+  .content-body.padded { padding: 8px; }
+  .content-head .search { width: 100%; padding: 4px 0; }
+  .geo-grid { grid-template-columns: repeat(2, 1fr); }
+  .pens { padding: 6px 8px; }
+  .scene-hint { display: none; }
+  .tag-popover { width: min(320px, 92vw); }
+}
+
+/* touch screens: larger targets, 16px inputs (stops iOS auto-zoom) */
+@media (pointer: coarse) {
+  input, select, textarea { font-size: 16px; }
+  .display-canvas input, .display-canvas select { font-size: inherit; }
+  .tree-row { height: 38px; }
+  .layer-row { padding: 9px 10px; }
+  .icon-btn { padding: 8px; }
+  .content-head button, .toolbar button, .modal button, .sidebar button, .alarm-bar button { min-height: 36px; }
+  .el.clickable:hover { filter: none; outline: none; }
+  .el.clickable:active { filter: brightness(1.2); }
+}

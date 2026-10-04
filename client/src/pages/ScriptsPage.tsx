@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { CheckCircle2, FilePlus2, Play, Plus, Save, Trash2, XCircle } from 'lucide-react';
 import type { ScriptConfig, ScriptLogEntry, ScriptStatus, ScriptTrigger, TreeItem } from '@shared/types.ts';
 import { Empty } from '../components/Overlays.tsx';
+import { Sidebar } from '../components/Sidebar.tsx';
 import { Tree } from '../components/Tree.tsx';
 import { CodeEditor } from '../editor/LazyMonaco.tsx';
 import type { EditorMarker } from '../editor/MonacoEditor.tsx';
@@ -145,7 +146,7 @@ export function ScriptsPage() {
 
   return (
     <div className="page with-sidebar">
-      <aside className="sidebar">
+      <Sidebar>
         <div className="sidebar-head"><span>Scripts</span><button className="icon-btn" title="New script" onClick={() => void create()}><FilePlus2 size={15} /></button></div>
         <div className="sidebar-scroll">
           <Tree items={items} selected={name} defaultDepth={2} onSelect={(it) => { if (!it.children) navigate('scripts', it.id); }}
@@ -156,7 +157,7 @@ export function ScriptsPage() {
             }} />
           <div className="hint">Page scripts (element events, display open/timer) are edited in the Designer — same TypeScript API.</div>
         </div>
-      </aside>
+      </Sidebar>
       <main className="content">
         {!cfg ? <Empty>Select or create a server script.</Empty> : (
           <>

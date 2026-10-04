@@ -1,6 +1,6 @@
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react';
 import {
-  Bell, Box, Cpu, FileCode2, FlaskConical, LineChart, LogIn, LogOut, Map, Monitor, Moon, PencilRuler, Settings2, Sun, Tags, Wrench,
+  Bell, Box, Cpu, FileCode2, FlaskConical, LineChart, LogIn, LogOut, Map, Menu, Monitor, Moon, PanelLeftOpen, PanelRightOpen, PencilRuler, Settings2, Sun, Tags, Wrench, X,
 } from 'lucide-react';
 import type { Role, SessionUser } from '@shared/types.ts';
 import { AlarmBar } from './components/AlarmBar.tsx';
@@ -28,20 +28,20 @@ import { useProject } from './stores/project.ts';
 import { hasRole, useSession } from './stores/session.ts';
 import { useUi } from './stores/ui.ts';
 
-interface NavItem { id: string; label: string; icon: ReactNode; role: Role; page: () => ReactNode }
+interface NavItem { id: string; label: string; icon: ReactNode; role: Role; page: () => ReactNode; drawers?: ('left' | 'right')[] }
 
 const NAV: NavItem[] = [
-  { id: 'view', label: 'Runtime', icon: <Monitor size={17} />, role: 'viewer', page: () => <ViewPage /> },
-  { id: 'scenes', label: '3D', icon: <Box size={17} />, role: 'viewer', page: () => <ScenesPage /> },
+  { id: 'view', label: 'Runtime', icon: <Monitor size={17} />, role: 'viewer', page: () => <ViewPage /> , drawers: ['left'] },
+  { id: 'scenes', label: '3D', icon: <Box size={17} />, role: 'viewer', page: () => <ScenesPage /> , drawers: ['left', 'right'] },
   { id: 'alarms', label: 'Alarms', icon: <Bell size={17} />, role: 'viewer', page: () => <AlarmsPage /> },
-  { id: 'trends', label: 'Trends', icon: <LineChart size={17} />, role: 'viewer', page: () => <TrendsPage /> },
+  { id: 'trends', label: 'Trends', icon: <LineChart size={17} />, role: 'viewer', page: () => <TrendsPage /> , drawers: ['left'] },
   { id: 'map', label: 'Map', icon: <Map size={17} />, role: 'viewer', page: () => <MapPage /> },
-  { id: 'tags', label: 'Tags', icon: <Tags size={17} />, role: 'viewer', page: () => <TagsPage /> },
+  { id: 'tags', label: 'Tags', icon: <Tags size={17} />, role: 'viewer', page: () => <TagsPage /> , drawers: ['left'] },
   { id: 'devices', label: 'Devices', icon: <Cpu size={17} />, role: 'viewer', page: () => <DevicesPage /> },
   { id: 'recipes', label: 'Recipes', icon: <FlaskConical size={17} />, role: 'viewer', page: () => <RecipesPage /> },
-  { id: 'design', label: 'Designer', icon: <PencilRuler size={17} />, role: 'engineer', page: () => <DesignPage /> },
-  { id: 'scripts', label: 'Scripts', icon: <FileCode2 size={17} />, role: 'engineer', page: () => <ScriptsPage /> },
-  { id: 'config', label: 'Config', icon: <Settings2 size={17} />, role: 'engineer', page: () => <ConfigPage /> },
+  { id: 'design', label: 'Designer', icon: <PencilRuler size={17} />, role: 'engineer', page: () => <DesignPage /> , drawers: ['left', 'right'] },
+  { id: 'scripts', label: 'Scripts', icon: <FileCode2 size={17} />, role: 'engineer', page: () => <ScriptsPage /> , drawers: ['left'] },
+  { id: 'config', label: 'Config', icon: <Settings2 size={17} />, role: 'engineer', page: () => <ConfigPage /> , drawers: ['right'] },
   { id: 'system', label: 'System', icon: <Wrench size={17} />, role: 'engineer', page: () => <SystemPage /> },
 ];
 
@@ -58,8 +58,31 @@ function Clock() {
   return <span className="clock mono">{now.toLocaleTimeString()}</span>;
 }
 
+function NavDrawer({ onClose, role }: { onClose: () => void; role: Role | null }) {
+  const route = useRoute();
+  const project = useProject((s) => s.info?.name);
+  return (
+    <>
+      <div className="drawer-backdrop" onClick={onClose} />
+      <nav className="nav-drawer" aria-label="Main">
+        <div className="nav-drawer-head"><span>{project}</span><button className="icon-btn" onClick={onClose} aria-label="Close menu"><X size={18} /></button></div>
+        {NAV.filter((n) => hasRole(n.role, role)).map((n) => (
+          <button key={n.id} className={`nav-drawer-item ${route.page === n.id || (!route.page && n.id === 'view') ? 'active' : ''}`}
+            onClick={() => { navigate(n.id); onClose(); }}>
+            {n.icon}<span>{n.label}</span>
+          </button>
+        ))}
+        <div className="nav-drawer-foot">
+          <button onClick={() => useUi.getState().toggleTheme()}><Sun size={15} /> Toggle theme</button>
+        </div>
+      </nav>
+    </>
+  );
+}
+
 function Header() {
   const route = useRoute();
+  const [menu, setMenu] = useState(false);
   const user = useSession((s) => s.user);
   const anon = useSession((s) => s.anonymousRole);
   const project = useProject((s) => s.info?.name);
@@ -75,6 +98,8 @@ function Header() {
   };
   return (
     <header className="topbar">
+      <button className="icon-btn menu-btn" onClick={() => setMenu(true)} aria-label="Open menu"><Menu size={20} /></button>
+      {menu && <NavDrawer onClose={() => setMenu(false)} role={role} />}
       <div className="brand" onClick={() => navigate('view')}>
         <img src="/favicon.svg" alt="" width={24} height={24} />
         <span>Nexus<span className="brand-light">SCADA</span></span>
@@ -90,12 +115,12 @@ function Header() {
       <span className="spacer" />
       <span className="project-name">{project}</span>
       {demo && <span className="demo-badge" title="Public demo: operate freely; saving scripts, graphics and configuration is disabled. Sign in as admin/admin, engineer/engineer or operator/operator.">PUBLIC DEMO</span>}
-      <span className={`conn conn-${conn}`} title={`Runtime link: ${conn}`}><i />{conn}</span>
+      <span className={`conn conn-${conn}`} title={`Runtime link: ${conn}`}><i /><span className="conn-text">{conn}</span></span>
       <Clock />
-      <button className="icon-btn" onClick={() => useUi.getState().toggleTheme()} title="Toggle theme">{theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}</button>
+      <button className="icon-btn hide-phone" onClick={() => useUi.getState().toggleTheme()} title="Toggle theme">{theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}</button>
       {user
-        ? <button className="user-btn" onClick={logout} title="Sign out"><span className="avatar">{user.username[0].toUpperCase()}</span>{user.username}<small>{user.role}</small><LogOut size={14} /></button>
-        : <button className="user-btn" onClick={() => useSession.getState().openLogin(true)}><LogIn size={14} /> Sign in</button>}
+        ? <button className="user-btn" onClick={logout} title="Sign out"><span className="avatar">{user.username[0].toUpperCase()}</span><span className="user-name">{user.username}<small> {user.role}</small></span><LogOut size={14} /></button>
+        : <button className="user-btn" onClick={() => useSession.getState().openLogin(true)}><LogIn size={14} /><span className="user-name">Sign in</span></button>}
     </header>
   );
 }
@@ -139,9 +164,11 @@ export function App() {
 
   const item = NAV.find((n) => n.id === (route.page || 'view')) ?? NAV[0];
   const allowed = hasRole(item.role, role);
+  const drawer = useUi((s) => s.drawer);
+  useEffect(() => { useUi.getState().setDrawer(null); }, [route.page]);
 
   return (
-    <div className="app">
+    <div className={`app page-${item.id}`}>
       <Header />
       <div className="main">
         {bootError && <div className="boot-error">Cannot reach the server: {bootError}</div>}
@@ -149,6 +176,13 @@ export function App() {
         {!bootError && role && !loaded && <div className="loading">Loading project…</div>}
         {!bootError && role && loaded && (allowed ? item.page() : <div className="boot-error">You need the “{item.role}” role for this page. <button onClick={() => useSession.getState().openLogin(true)}>Sign in</button></div>)}
       </div>
+      {role && loaded && allowed && item.drawers?.map((side) => (
+        <button key={side} className={`drawer-fab ${side} ${item.id === 'design' ? 'wide-bp' : ''} ${drawer === side ? 'active' : ''}`}
+          aria-label={side === 'left' ? 'Toggle navigator' : 'Toggle properties'}
+          onClick={() => useUi.getState().setDrawer(drawer === side ? null : side)}>
+          {side === 'left' ? <PanelLeftOpen size={20} /> : <PanelRightOpen size={20} />}
+        </button>
+      ))}
       {role && <AlarmBar />}
       <FaceplateHost />
       <TagDatalist />
