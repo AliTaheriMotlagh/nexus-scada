@@ -450,4 +450,6 @@ export interface ProjectInfo {
   uptimeSec: number;
   anonymousRole?: Role;
   location?: { lat: number; lng: number };
+  /** Public demo: engineering changes (code, config, graphics) are rejected by the server */
+  demo?: boolean;
 }

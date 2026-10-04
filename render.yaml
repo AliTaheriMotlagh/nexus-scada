@@ -1,0 +1,24 @@
+# Render Blueprint — one-click free hosting:
+#   https://render.com/deploy?repo=https://github.com/AliTaheriMotlagh/nexus-scada
+# Free plan notes: the service sleeps after 15 min without traffic (first request wakes it in ~1 min)
+# and the disk is ephemeral (project + history reset on every deploy/restart) — fine for a public demo.
+services:
+  - type: web
+    name: nexus-scada
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: "8080"
+      - key: NEXUS_DEMO          # public demo: operate freely, saving code/config/graphics is disabled
+        value: "true"
+      - key: NEXUS_SECRET        # token signing key
+        generateValue: true
+      - key: TZ
+        value: Asia/Tehran
+      - key: LOG_LEVEL
+        value: info

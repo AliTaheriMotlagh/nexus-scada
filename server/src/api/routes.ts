@@ -33,6 +33,11 @@ export function createApi(rt: Runtime): Router {
     next();
   };
   const who = (res: Response) => res.locals.user?.username ?? 'anonymous';
+  /** Engineering changes are blocked in the public demo (they would execute code on the server or in other visitors' browsers). */
+  const notInDemo = (_req: Request, _res: Response, next: NextFunction) => {
+    if (rt.demo) throw new AppError('Saving is disabled in the public demo — run your own copy to edit', 403);
+    next();
+  };
 
   // ── system ──
   api.get('/health', (_req, res) => { res.json({ status: 'ok', uptimeSec: rt.info().uptimeSec }); });
@@ -96,7 +101,7 @@ export function createApi(rt: Runtime): Router {
 
   // ── devices ──
   api.get('/devices', need('viewer'), (_req, res) => { res.json(rt.drivers.statuses()); });
-  api.post('/devices/enable', need('engineer'), async (req, res) => {
+  api.post('/devices/enable', need('engineer'), notInDemo, async (req, res) => {
     await rt.drivers.setEnabled(String(req.body?.path), Boolean(req.body?.enabled));
     rt.auth.audit(who(res), req.body?.enabled ? 'device.enable' : 'device.disable', req.body?.path);
     res.json({ ok: true });
@@ -109,7 +114,7 @@ export function createApi(rt: Runtime): Router {
 
   // ── project configuration (YAML) ──
   api.get('/project/yaml', need('engineer'), (_req, res) => { res.type('text/yaml').send(rt.store.readYaml()); });
-  api.put('/project/yaml', need('engineer'), async (req, res) => {
+  api.put('/project/yaml', need('engineer'), notInDemo, async (req, res) => {
     const text = typeof req.body === 'string' ? req.body : String(req.body?.yaml ?? '');
     await rt.saveProjectYaml(text, who(res));
     res.json({ ok: true, revision: rt.store.revision });
@@ -125,12 +130,12 @@ export function createApi(rt: Runtime): Router {
   api.get('/project/revisions', need('engineer'), (_req, res) => { res.json(rt.store.revisions()); });
   api.get('/project/revisions/:id', need('engineer'), (req, res) => { res.type('text/yaml').send(rt.store.readRevision(String(req.params.id))); });
   api.get('/project/nodes', need('engineer'), (_req, res) => { res.json(rt.config.nodes); });
-  api.put('/project/nodes', need('engineer'), async (req, res) => {
+  api.put('/project/nodes', need('engineer'), notInDemo, async (req, res) => {
     if (!Array.isArray(req.body)) throw badRequest('nodes must be an array');
     await rt.updateSection('nodes', req.body as ProjectNode[], who(res));
     res.json({ ok: true });
   });
-  api.post('/project/reload', need('engineer'), async (_req, res) => {
+  api.post('/project/reload', need('engineer'), notInDemo, async (_req, res) => {
     await rt.reload();
     rt.auth.audit(who(res), 'project.reload');
     res.json({ ok: true });
@@ -140,21 +145,21 @@ export function createApi(rt: Runtime): Router {
   const documents = <T extends { name: string }>(base: string, repo: DocumentRepository<T>, label: string) => {
     api.get(`/${base}`, need('viewer'), (_req, res) => { res.json({ names: repo.list(), tree: repo.tree(label) }); });
     api.get(`/${base}/*name`, need('viewer'), (req, res) => { res.json(repo.get(wildcard(req.params.name))); });
-    api.put(`/${base}/*name`, need('engineer'), (req, res) => {
+    api.put(`/${base}/*name`, need('engineer'), notInDemo, (req, res) => {
       const name = wildcard(req.params.name);
       repo.save(name, req.body as T);
       rt.auth.audit(who(res), `${label}.save`, name);
       rt.bus.emit('project:reloaded', { revision: rt.store.revision });
       res.json({ ok: true });
     });
-    api.delete(`/${base}/*name`, need('engineer'), (req, res) => {
+    api.delete(`/${base}/*name`, need('engineer'), notInDemo, (req, res) => {
       const name = wildcard(req.params.name);
       repo.delete(name);
       rt.auth.audit(who(res), `${label}.delete`, name);
       rt.bus.emit('project:reloaded', { revision: rt.store.revision });
       res.json({ ok: true });
     });
-    api.post(`/${base}-rename`, need('engineer'), (req, res) => {
+    api.post(`/${base}-rename`, need('engineer'), notInDemo, (req, res) => {
       repo.rename(String(req.body?.from), String(req.body?.to));
       rt.auth.audit(who(res), `${label}.rename`, `${req.body?.from} → ${req.body?.to}`);
       rt.bus.emit('project:reloaded', { revision: rt.store.revision });
@@ -171,7 +176,7 @@ export function createApi(rt: Runtime): Router {
     const cfg = rt.scripts.config(req.params.name as string);
     res.json({ config: cfg, code: rt.store.readScript(cfg.file) });
   });
-  api.put('/scripts/:name', need('engineer'), async (req, res) => {
+  api.put('/scripts/:name', need('engineer'), notInDemo, async (req, res) => {
     const name = req.params.name as string;
     const scripts = [...(rt.config.scripts ?? [])];
     const idx = scripts.findIndex((s) => s.name === name);
@@ -184,7 +189,7 @@ export function createApi(rt: Runtime): Router {
     rt.auth.audit(who(res), 'script.save', name);
     res.json({ ok: true });
   });
-  api.delete('/scripts/:name', need('engineer'), async (req, res) => {
+  api.delete('/scripts/:name', need('engineer'), notInDemo, async (req, res) => {
     const scripts = (rt.config.scripts ?? []).filter((s) => s.name !== req.params.name);
     await rt.updateSection('scripts', scripts, who(res));
     rt.auth.audit(who(res), 'script.delete', req.params.name as string);
@@ -204,16 +209,16 @@ export function createApi(rt: Runtime): Router {
     rt.auth.audit(who(res), 'recipe.download', `${req.params.name}/${req.body?.set}`);
     res.json({ ok: true });
   });
-  api.post('/recipes/:name/upload', need('engineer'), (req, res) => {
+  api.post('/recipes/:name/upload', need('engineer'), notInDemo, (req, res) => {
     res.json(rt.recipes.upload(req.params.name as string, String(req.body?.set), who(res)));
     rt.auth.audit(who(res), 'recipe.upload', `${req.params.name}/${req.body?.set}`);
   });
-  api.delete('/recipes/:name/sets/:set', need('engineer'), (req, res) => {
+  api.delete('/recipes/:name/sets/:set', need('engineer'), notInDemo, (req, res) => {
     rt.recipes.deleteSet(req.params.name as string, req.params.set as string, who(res));
     rt.auth.audit(who(res), 'recipe.deleteSet', `${req.params.name}/${req.params.set}`);
     res.json({ ok: true });
   });
-  api.post('/notify/test', need('engineer'), async (req, res) => {
+  api.post('/notify/test', need('engineer'), notInDemo, async (req, res) => {
     await rt.notifier.notify({ title: 'Nexus SCADA test', message: `Test notification from ${who(res)}`, severity: 'info' }, req.body?.channel);
     res.json({ ok: true });
   });
@@ -222,7 +227,7 @@ export function createApi(rt: Runtime): Router {
   api.get('/map', need('viewer'), (_req, res) => {
     res.json(rt.config.map ?? { center: [rt.config.location?.lat ?? 51.5, rt.config.location?.lng ?? 0], zoom: 5, markers: [] });
   });
-  api.put('/map', need('engineer'), async (req, res) => {
+  api.put('/map', need('engineer'), notInDemo, async (req, res) => {
     await rt.updateSection('map', req.body as MapConfig, who(res));
     res.json({ ok: true });
   });

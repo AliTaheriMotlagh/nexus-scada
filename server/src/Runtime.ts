@@ -39,6 +39,8 @@ export class Runtime {
   readonly scripts: ScriptEngine;
   readonly auth: AuthService;
   readonly startedAt = Date.now();
+  /** NEXUS_DEMO=true → public demo: operating is allowed, saving code/config/graphics is not. */
+  readonly demo = process.env.NEXUS_DEMO === 'true' || process.env.NEXUS_DEMO === '1';
   config!: ProjectConfig;
   private reloadChain: Promise<void> = Promise.resolve();
 
@@ -139,6 +141,7 @@ export class Runtime {
       uptimeSec: Math.round((Date.now() - this.startedAt) / 1000),
       anonymousRole: this.auth.anonymousRole,
       location: this.config.location,
+      demo: this.demo,
     };
   }
 

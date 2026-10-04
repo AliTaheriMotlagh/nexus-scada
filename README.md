@@ -11,6 +11,8 @@ docker compose up -d                          →  http://localhost:8080
 
 Demo users: `admin/admin`, `engineer/engineer`, `operator/operator` (anonymous visitors get read-only `viewer`).
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/AliTaheriMotlagh/nexus-scada)
+
 ---
 
 ## Features
@@ -60,7 +62,16 @@ docker compose up -d                    # http://localhost:8080 — project + da
 docker compose --profile iot up -d      # + Mosquitto MQTT broker for home IoT (use url mqtt://mosquitto:1883)
 ```
 
-Environment variables: `PORT`, `NEXUS_PROJECT_DIR`, `NEXUS_DATA_DIR`, `NEXUS_SECRET` (token signing key), `LOG_LEVEL`, `NEXUS_BACKEND` (Vite dev proxy target).
+### Free hosting (Render)
+
+1. Click **Deploy to Render** above (or *New → Blueprint* in Render and pick this repo). `render.yaml` configures everything.
+2. Sign in with GitHub, confirm, and wait about 5 minutes for the Docker build. Your HMI is then live at `https://nexus-scada-xxxx.onrender.com`.
+
+On the free plan the service sleeps after 15 minutes without visitors (the next visit wakes it in about a minute), and the disk resets on every deploy or restart.
+The blueprint enables **public demo mode** (`NEXUS_DEMO=true`). Visitors can operate the process, acknowledge alarms and explore the designer and script editor, but the server rejects saving scripts, graphics and configuration. That matters because published demo passwords would otherwise let strangers run code on your server.
+For a private instance, set `NEXUS_DEMO=false` **and** replace the demo users with `passwordHash` entries.
+
+Environment variables: `NEXUS_DEMO`, `PORT`, `NEXUS_PROJECT_DIR`, `NEXUS_DATA_DIR`, `NEXUS_SECRET` (token signing key), `LOG_LEVEL`, `NEXUS_BACKEND` (Vite dev proxy target).
 
 ---
 

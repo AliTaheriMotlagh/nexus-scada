@@ -63,6 +63,7 @@ function Header() {
   const user = useSession((s) => s.user);
   const anon = useSession((s) => s.anonymousRole);
   const project = useProject((s) => s.info?.name);
+  const demo = useProject((s) => s.info?.demo);
   const theme = useUi((s) => s.theme);
   const conn = useConnectionState();
   const unacked = useAlarms((s) => s.list.filter((a) => a.state !== 'active-acked' && !a.shelvedUntil).length);
@@ -88,6 +89,7 @@ function Header() {
       </nav>
       <span className="spacer" />
       <span className="project-name">{project}</span>
+      {demo && <span className="demo-badge" title="Public demo: operate freely; saving scripts, graphics and configuration is disabled. Sign in as admin/admin, engineer/engineer or operator/operator.">PUBLIC DEMO</span>}
       <span className={`conn conn-${conn}`} title={`Runtime link: ${conn}`}><i />{conn}</span>
       <Clock />
       <button className="icon-btn" onClick={() => useUi.getState().toggleTheme()} title="Toggle theme">{theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}</button>
