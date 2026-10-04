@@ -67,6 +67,38 @@ class RuntimeConnection {
   private scriptLogListeners = new Set<(e: ScriptLogEntry) => void>();
   private waiters = new Map<string, (() => void)[]>();
   state: ConnectionState = 'disconnected';
+  private handlers = new Map<string, Set<(...args: never[]) => void>>();
+  private wired = new WeakMap<HubConnection, Set<string>>();
+
+  /** Subscribe to a server → client hub message (survives reconnects). */
+  on<A extends unknown[]>(event: string, handler: (...args: A) => void): () => void {
+    let set = this.handlers.get(event);
+    if (!set) {
+      set = new Set();
+      this.handlers.set(event, set);
+    }
+    set.add(handler as unknown as (...args: never[]) => void);
+    if (this.conn) this.wire(this.conn, event);
+    return () => { set.delete(handler as unknown as (...args: never[]) => void); };
+  }
+
+  private wire(conn: HubConnection, event: string): void {
+    let done = this.wired.get(conn);
+    if (!done) {
+      done = new Set();
+      this.wired.set(conn, done);
+    }
+    if (done.has(event)) return;
+    done.add(event);
+    conn.on(event, (...args: unknown[]) => {
+      for (const h of this.handlers.get(event) ?? []) (h as (...a: unknown[]) => void)(...args);
+    });
+  }
+
+  /** Current SignalR connection id (to recognise our own echoes). */
+  get connectionId(): string | null {
+    return this.conn?.connectionId ?? null;
+  }
 
   private setState(s: ConnectionState) {
     this.state = s;
@@ -106,6 +138,7 @@ class RuntimeConnection {
     conn.on('deviceStatus', (s: DeviceStatus) => useProject.getState().setDevice(s));
     conn.on('scriptLog', (e: ScriptLogEntry) => this.scriptLogListeners.forEach((l) => l(e)));
     conn.on('projectChanged', () => void useProject.getState().refresh().catch(() => undefined));
+    for (const event of this.handlers.keys()) this.wire(conn, event);
     conn.onreconnecting(() => this.setState('reconnecting'));
     conn.onreconnected(() => {
       this.setState('connected');

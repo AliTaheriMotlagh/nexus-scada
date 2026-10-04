@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { applyOps, type DesignOp } from '@shared/designOps.ts';
 import type { Binding, DisplayDoc, ElementDoc } from '@shared/types.ts';
 import { uid } from '../../lib/format.ts';
 
@@ -19,8 +20,13 @@ interface DesignerState {
   snap: boolean;
   showGrid: boolean;
   preview: boolean;
+  /** Armed placement tool (tap-to-place; works with touch where drag & drop does not) */
+  tool: { kind: 'element' | 'tag'; id: string; label: string } | null;
+  setTool(tool: DesignerState['tool']): void;
 
   load(name: string, doc: DisplayDoc): void;
+  /** Apply a collaborator's operations; they are also folded into undo/redo history so undo only reverts your own changes. */
+  applyRemote(ops: DesignOp[]): void;
   markSaved(): void;
   /** Push an undo checkpoint (call once before a continuous gesture such as dragging). */
   checkpoint(): void;
@@ -71,9 +77,23 @@ export const useDesigner = create<DesignerState>((set, get) => {
     snap: true,
     showGrid: true,
     preview: false,
+    tool: null,
+    setTool: (tool) => set({ tool }),
 
     load: (name, doc) => set({ name, doc: clone(doc), selection: [], dirty: false, past: [], future: [] }),
     markSaved: () => set({ dirty: false }),
+    applyRemote(ops) {
+      const { doc, past, future, selection } = get();
+      if (!doc) return;
+      const next = applyOps(doc, ops);
+      const alive = new Set(next.elements.map((e) => e.id));
+      set({
+        doc: next,
+        past: past.map((d) => applyOps(d, ops)),
+        future: future.map((d) => applyOps(d, ops)),
+        selection: selection.filter((id) => alive.has(id)),
+      });
+    },
 
     checkpoint() {
       const { doc, past } = get();

@@ -45,6 +45,8 @@ export interface HubDefinition {
 export interface HubClients {
   all: { send(target: string, ...args: unknown[]): void };
   group(name: string): { send(target: string, ...args: unknown[]): void };
+  /** Send to every member of a group except one connection (e.g. the sender). */
+  groupExcept(name: string, connectionId: string): { send(target: string, ...args: unknown[]): void };
   connections(): Iterable<HubConnection>;
   addToGroup(connectionId: string, group: string): void;
   removeFromGroup(connectionId: string, group: string): void;
@@ -134,6 +136,11 @@ export class SignalRHubServer {
       group: (name) => ({
         send: (target, ...args) => {
           for (const id of this.groups.get(name) ?? []) this.connections.get(id)?.send(target, ...args);
+        },
+      }),
+      groupExcept: (name, except) => ({
+        send: (target, ...args) => {
+          for (const id of this.groups.get(name) ?? []) if (id !== except) this.connections.get(id)?.send(target, ...args);
         },
       }),
       connections: () => this.connections.values(),

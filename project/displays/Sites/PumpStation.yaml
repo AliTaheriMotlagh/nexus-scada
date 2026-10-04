@@ -1,0 +1,639 @@
+title: Wastewater pump station
+kind: page
+width: 1600
+height: 900
+background: "#0f1722"
+grid: 10
+elements:
+  - id: text1
+    type: text
+    x: 24
+    y: 12
+    w: 800
+    h: 43
+    props:
+      text: Wastewater pump station
+      fontSize: 24
+      color: "#e2e8f0"
+      fontWeight: "700"
+  - id: clock2
+    type: clock
+    x: 1400
+    y: 16
+    w: 180
+    h: 32
+    props:
+      format: datetime
+      fontSize: 14
+      color: "#94a3b8"
+  - id: rect3
+    type: rect
+    x: 16
+    y: 60
+    w: 1064
+    h: 566
+    props:
+      fill: "#111b27"
+      stroke: "#233244"
+      radius: 10
+    locked: true
+  - id: text4
+    type: text
+    x: 30
+    y: 66
+    w: 1036
+    h: 22
+    props:
+      text: WET WELL & PUMPS
+      fontSize: 12
+      color: "#64748b"
+      fontWeight: "700"
+  - id: rect5
+    type: rect
+    x: 1092
+    y: 60
+    w: 492
+    h: 254
+    props:
+      fill: "#111b27"
+      stroke: "#233244"
+      radius: 10
+    locked: true
+  - id: text6
+    type: text
+    x: 1106
+    y: 66
+    w: 464
+    h: 22
+    props:
+      text: KEY FIGURES
+      fontSize: 12
+      color: "#64748b"
+      fontWeight: "700"
+  - id: rect7
+    type: rect
+    x: 1092
+    y: 326
+    w: 492
+    h: 300
+    props:
+      fill: "#111b27"
+      stroke: "#233244"
+      radius: 10
+    locked: true
+  - id: text8
+    type: text
+    x: 1106
+    y: 332
+    w: 464
+    h: 22
+    props:
+      text: TREND — 15 MIN
+      fontSize: 12
+      color: "#64748b"
+      fontWeight: "700"
+  - id: rect9
+    type: rect
+    x: 1092
+    y: 638
+    w: 492
+    h: 248
+    props:
+      fill: "#111b27"
+      stroke: "#233244"
+      radius: 10
+    locked: true
+  - id: text10
+    type: text
+    x: 1106
+    y: 644
+    w: 464
+    h: 22
+    props:
+      text: OPERATOR CONTROLS
+      fontSize: 12
+      color: "#64748b"
+      fontWeight: "700"
+  - id: text11
+    type: text
+    x: 40
+    y: 110
+    w: 200
+    h: 23
+    props:
+      text: Inflow ▸
+      fontSize: 13
+      color: "#94a3b8"
+  - id: pipe12
+    type: pipe
+    x: 30
+    y: 150
+    w: 200
+    h: 18
+    props:
+      flowColor: "#a8a29e"
+    bindings:
+      flowing:
+        tag: Sites/PumpStation/Inflow
+        expr: value > 0
+  - id: value13
+    type: value
+    x: 36
+    y: 176
+    w: 180
+    h: 34
+    props:
+      tag: Sites/PumpStation/Inflow
+      label: In
+      fontSize: 15
+      align: left
+      decimals: 0
+  - id: tank14
+    type: tank
+    x: 230
+    y: 110
+    w: 190
+    h: 300
+    props:
+      label: WET WELL
+      fillColor: "#a16207"
+      unit: "%"
+    bindings:
+      level:
+        tag: Sites/PumpStation/WetWellLevel
+      fillColor:
+        tag: Sites/PumpStation/WetWellLevel
+        map:
+          - when: ">=85"
+            value: "#ef4444"
+          - when: default
+            value: "#a16207"
+    faceplate:
+      path: Sites/PumpStation
+  - id: numeric15
+    type: numeric
+    x: 236
+    y: 420
+    w: 180
+    h: 32
+    props:
+      tag: Sites/PumpStation/StartLevel
+      label: Start
+      unit: "%"
+  - id: numeric16
+    type: numeric
+    x: 236
+    y: 458
+    w: 180
+    h: 32
+    props:
+      tag: Sites/PumpStation/StopLevel
+      label: Stop
+      unit: "%"
+  - id: pipe17
+    type: pipe
+    x: 420
+    y: 380
+    w: 560
+    h: 18
+    props: {}
+    bindings:
+      flowing:
+        tag: Sites/PumpStation/Outflow
+        expr: value > 0
+  - id: pipe18
+    type: pipe
+    x: 480
+    y: 120
+    w: 500
+    h: 18
+    props: {}
+    bindings:
+      flowing:
+        tag: Sites/PumpStation/Outflow
+        expr: value > 0
+  - id: text19
+    type: text
+    x: 860
+    y: 92
+    w: 200
+    h: 23
+    props:
+      text: To treatment ▸
+      fontSize: 13
+      color: "#94a3b8"
+  - id: pipe20
+    type: pipe
+    x: 470
+    y: 246
+    w: 150
+    h: 18
+    props: {}
+    rotation: 90
+    bindings:
+      flowing:
+        tag: Sites/PumpStation/Pump1/Running
+        expr: value === true
+  - id: valve21
+    type: valve
+    x: 515
+    y: 160
+    w: 60
+    h: 60
+    props: {}
+    bindings:
+      open:
+        tag: Sites/PumpStation/Pump1/Running
+    tooltip: Check valve 1
+  - id: pump22
+    type: pump
+    x: 500
+    y: 330
+    w: 90
+    h: 90
+    props: {}
+    bindings:
+      running:
+        tag: Sites/PumpStation/Pump1/Running
+      fault:
+        tag: Sites/PumpStation/Pump1/Fault
+      speed:
+        tag: Sites/PumpStation/Pump1/Speed
+    faceplate:
+      path: Sites/PumpStation/Pump1
+    tooltip: Pump 1 — click for faceplate
+  - id: text23
+    type: text
+    x: 500
+    y: 424
+    w: 90
+    h: 22
+    props:
+      text: P-1
+      fontSize: 12
+      color: "#94a3b8"
+      align: center
+  - id: value24
+    type: value
+    x: 490
+    y: 448
+    w: 110
+    h: 28
+    props:
+      tag: Sites/PumpStation/Pump1/Current
+      fontSize: 13
+  - id: multistate25
+    type: multistate
+    x: 490
+    y: 482
+    w: 110
+    h: 26
+    props:
+      states: true:RUN:#16a34a,false:STOP:#475569,FAULT:TRIP:#dc2626
+    bindings:
+      value:
+        tag: Sites/PumpStation/Pump1/Fault
+        expr: "value ? 'FAULT' : tag('Sites/PumpStation/Pump1/Running')"
+  - id: pipe26
+    type: pipe
+    x: 640
+    y: 246
+    w: 150
+    h: 18
+    props: {}
+    rotation: 90
+    bindings:
+      flowing:
+        tag: Sites/PumpStation/Pump2/Running
+        expr: value === true
+  - id: valve27
+    type: valve
+    x: 685
+    y: 160
+    w: 60
+    h: 60
+    props: {}
+    bindings:
+      open:
+        tag: Sites/PumpStation/Pump2/Running
+    tooltip: Check valve 2
+  - id: pump28
+    type: pump
+    x: 670
+    y: 330
+    w: 90
+    h: 90
+    props: {}
+    bindings:
+      running:
+        tag: Sites/PumpStation/Pump2/Running
+      fault:
+        tag: Sites/PumpStation/Pump2/Fault
+      speed:
+        tag: Sites/PumpStation/Pump2/Speed
+    faceplate:
+      path: Sites/PumpStation/Pump2
+    tooltip: Pump 2 — click for faceplate
+  - id: text29
+    type: text
+    x: 670
+    y: 424
+    w: 90
+    h: 22
+    props:
+      text: P-2
+      fontSize: 12
+      color: "#94a3b8"
+      align: center
+  - id: value30
+    type: value
+    x: 660
+    y: 448
+    w: 110
+    h: 28
+    props:
+      tag: Sites/PumpStation/Pump2/Current
+      fontSize: 13
+  - id: multistate31
+    type: multistate
+    x: 660
+    y: 482
+    w: 110
+    h: 26
+    props:
+      states: true:RUN:#16a34a,false:STOP:#475569,FAULT:TRIP:#dc2626
+    bindings:
+      value:
+        tag: Sites/PumpStation/Pump2/Fault
+        expr: "value ? 'FAULT' : tag('Sites/PumpStation/Pump2/Running')"
+  - id: pipe32
+    type: pipe
+    x: 810
+    y: 246
+    w: 150
+    h: 18
+    props: {}
+    rotation: 90
+    bindings:
+      flowing:
+        tag: Sites/PumpStation/Pump3/Running
+        expr: value === true
+  - id: valve33
+    type: valve
+    x: 855
+    y: 160
+    w: 60
+    h: 60
+    props: {}
+    bindings:
+      open:
+        tag: Sites/PumpStation/Pump3/Running
+    tooltip: Check valve 3
+  - id: pump34
+    type: pump
+    x: 840
+    y: 330
+    w: 90
+    h: 90
+    props: {}
+    bindings:
+      running:
+        tag: Sites/PumpStation/Pump3/Running
+      fault:
+        tag: Sites/PumpStation/Pump3/Fault
+      speed:
+        tag: Sites/PumpStation/Pump3/Speed
+    faceplate:
+      path: Sites/PumpStation/Pump3
+    tooltip: Pump 3 — click for faceplate
+  - id: text35
+    type: text
+    x: 840
+    y: 424
+    w: 90
+    h: 22
+    props:
+      text: P-3
+      fontSize: 12
+      color: "#94a3b8"
+      align: center
+  - id: value36
+    type: value
+    x: 830
+    y: 448
+    w: 110
+    h: 28
+    props:
+      tag: Sites/PumpStation/Pump3/Current
+      fontSize: 13
+  - id: multistate37
+    type: multistate
+    x: 830
+    y: 482
+    w: 110
+    h: 26
+    props:
+      states: true:RUN:#16a34a,false:STOP:#475569,FAULT:TRIP:#dc2626
+    bindings:
+      value:
+        tag: Sites/PumpStation/Pump3/Fault
+        expr: "value ? 'FAULT' : tag('Sites/PumpStation/Pump3/Running')"
+  - id: instrument38
+    type: instrument
+    x: 930
+    y: 150
+    w: 56
+    h: 56
+    props:
+      function: PT
+      loop: "101"
+      unit: bar
+      decimals: 2
+    bindings:
+      value:
+        tag: Sites/PumpStation/DischargePressure
+  - id: instrument39
+    type: instrument
+    x: 930
+    y: 222
+    w: 56
+    h: 56
+    props:
+      function: FT
+      loop: "102"
+      unit: m³/h
+      decimals: 0
+    bindings:
+      value:
+        tag: Sites/PumpStation/Outflow
+  - id: gauge40
+    type: gauge
+    x: 1104
+    y: 90
+    w: 150
+    h: 136
+    props:
+      tag: Sites/PumpStation/WetWellLevel
+      min: 0
+      max: 100
+      label: Wet well
+      unit: "%"
+      zones: 0:#f59e0b,15:#22c55e,85:#ef4444
+  - id: gauge41
+    type: gauge
+    x: 1262
+    y: 90
+    w: 150
+    h: 136
+    props:
+      tag: Sites/PumpStation/Outflow
+      min: 0
+      max: 250
+      label: Outflow
+      decimals: 0
+      zones: 0:#64748b,40:#22c55e
+  - id: gauge42
+    type: gauge
+    x: 1420
+    y: 90
+    w: 150
+    h: 136
+    props:
+      tag: Sites/PumpStation/DischargePressure
+      min: 0
+      max: 8
+      label: Pressure
+      zones: 0:#22c55e,5.5:#f59e0b,5.8:#ef4444
+  - id: barChart43
+    type: barChart
+    x: 1104
+    y: 232
+    w: 468
+    h: 76
+    props:
+      tags: Sites/PumpStation/Pump1/Current,Sites/PumpStation/Pump2/Current,Sites/PumpStation/Pump3/Current
+      labels: P-1 A,P-2 A,P-3 A
+      max: 45
+      decimals: 1
+  - id: trend44
+    type: trend
+    x: 1104
+    y: 356
+    w: 468
+    h: 258
+    props:
+      tags: Sites/PumpStation/WetWellLevel,Sites/PumpStation/Inflow,Sites/PumpStation/Outflow
+      minutes: 15
+      legend: false
+  - id: alarmTable45
+    type: alarmTable
+    x: 16
+    y: 638
+    w: 1064
+    h: 248
+    props:
+      area: Sites/PumpStation
+      maxRows: 8
+  - id: dropdown46
+    type: dropdown
+    x: 1106
+    y: 670
+    w: 150
+    h: 32
+    props:
+      tag: Sites/PumpStation/Mode
+      options: Auto:Auto (lead/lag),Manual:Manual
+  - id: switch47
+    type: switch
+    x: 1106
+    y: 712
+    w: 120
+    h: 32
+    props:
+      tag: Sites/PumpStation/Pump1/Running
+      label: P-1
+  - id: slider48
+    type: slider
+    x: 1230
+    y: 712
+    w: 200
+    h: 32
+    props:
+      tag: Sites/PumpStation/Pump1/Speed
+      showValue: true
+  - id: button49
+    type: button
+    x: 1440
+    y: 712
+    w: 130
+    h: 32
+    props:
+      text: Trip / reset
+      action: toggle
+      tag: Sites/PumpStation/Pump1/Fault
+      color: "#334155"
+      activeColor: "#b91c1c"
+      fontSize: 12
+  - id: switch50
+    type: switch
+    x: 1106
+    y: 754
+    w: 120
+    h: 32
+    props:
+      tag: Sites/PumpStation/Pump2/Running
+      label: P-2
+  - id: slider51
+    type: slider
+    x: 1230
+    y: 754
+    w: 200
+    h: 32
+    props:
+      tag: Sites/PumpStation/Pump2/Speed
+      showValue: true
+  - id: button52
+    type: button
+    x: 1440
+    y: 754
+    w: 130
+    h: 32
+    props:
+      text: Trip / reset
+      action: toggle
+      tag: Sites/PumpStation/Pump2/Fault
+      color: "#334155"
+      activeColor: "#b91c1c"
+      fontSize: 12
+  - id: switch53
+    type: switch
+    x: 1106
+    y: 796
+    w: 120
+    h: 32
+    props:
+      tag: Sites/PumpStation/Pump3/Running
+      label: P-3
+  - id: slider54
+    type: slider
+    x: 1230
+    y: 796
+    w: 200
+    h: 32
+    props:
+      tag: Sites/PumpStation/Pump3/Speed
+      showValue: true
+  - id: button55
+    type: button
+    x: 1440
+    y: 796
+    w: 130
+    h: 32
+    props:
+      text: Trip / reset
+      action: toggle
+      tag: Sites/PumpStation/Pump3/Fault
+      color: "#334155"
+      activeColor: "#b91c1c"
+      fontSize: 12
+name: Sites/PumpStation

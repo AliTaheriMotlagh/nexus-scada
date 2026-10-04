@@ -1,0 +1,354 @@
+title: Energy & power-quality monitoring
+kind: page
+width: 1600
+height: 900
+background: "#0f1722"
+grid: 10
+elements:
+  - id: text1
+    type: text
+    x: 24
+    y: 12
+    w: 800
+    h: 43
+    props:
+      text: Energy & power-quality monitoring
+      fontSize: 24
+      color: "#e2e8f0"
+      fontWeight: "700"
+  - id: clock2
+    type: clock
+    x: 1400
+    y: 16
+    w: 180
+    h: 32
+    props:
+      format: datetime
+      fontSize: 14
+      color: "#94a3b8"
+  - id: rect3
+    type: rect
+    x: 16
+    y: 60
+    w: 1064
+    h: 566
+    props:
+      fill: "#111b27"
+      stroke: "#233244"
+      radius: 10
+    locked: true
+  - id: text4
+    type: text
+    x: 30
+    y: 66
+    w: 1036
+    h: 22
+    props:
+      text: MAIN INCOMER
+      fontSize: 12
+      color: "#64748b"
+      fontWeight: "700"
+  - id: rect5
+    type: rect
+    x: 1092
+    y: 60
+    w: 492
+    h: 254
+    props:
+      fill: "#111b27"
+      stroke: "#233244"
+      radius: 10
+    locked: true
+  - id: text6
+    type: text
+    x: 1106
+    y: 66
+    w: 464
+    h: 22
+    props:
+      text: KEY FIGURES
+      fontSize: 12
+      color: "#64748b"
+      fontWeight: "700"
+  - id: rect7
+    type: rect
+    x: 1092
+    y: 326
+    w: 492
+    h: 300
+    props:
+      fill: "#111b27"
+      stroke: "#233244"
+      radius: 10
+    locked: true
+  - id: text8
+    type: text
+    x: 1106
+    y: 332
+    w: 464
+    h: 22
+    props:
+      text: DEMAND — 30 MIN
+      fontSize: 12
+      color: "#64748b"
+      fontWeight: "700"
+  - id: rect9
+    type: rect
+    x: 1092
+    y: 638
+    w: 492
+    h: 248
+    props:
+      fill: "#111b27"
+      stroke: "#233244"
+      radius: 10
+    locked: true
+  - id: text10
+    type: text
+    x: 1106
+    y: 644
+    w: 464
+    h: 22
+    props:
+      text: SUB-METERS
+      fontSize: 12
+      color: "#64748b"
+      fontWeight: "700"
+  - id: gauge11
+    type: gauge
+    x: 50
+    y: 100
+    w: 200
+    h: 180
+    props:
+      tag: Sites/EnergyMeter/VoltageL1
+      min: 200
+      max: 250
+      label: L1 voltage
+      zones: 200:#f59e0b,215:#22c55e,236:#ef4444
+  - id: bar12
+    type: bar
+    x: 120
+    y: 300
+    w: 60
+    h: 200
+    props:
+      tag: Sites/EnergyMeter/CurrentL1
+      min: 0
+      max: 300
+      color: "#38bdf8"
+  - id: text13
+    type: text
+    x: 80
+    y: 506
+    w: 140
+    h: 22
+    props:
+      text: L1 current
+      fontSize: 12
+      color: "#94a3b8"
+      align: center
+  - id: gauge14
+    type: gauge
+    x: 280
+    y: 100
+    w: 200
+    h: 180
+    props:
+      tag: Sites/EnergyMeter/VoltageL2
+      min: 200
+      max: 250
+      label: L2 voltage
+      zones: 200:#f59e0b,215:#22c55e,236:#ef4444
+  - id: bar15
+    type: bar
+    x: 350
+    y: 300
+    w: 60
+    h: 200
+    props:
+      tag: Sites/EnergyMeter/CurrentL2
+      min: 0
+      max: 300
+      color: "#38bdf8"
+  - id: text16
+    type: text
+    x: 310
+    y: 506
+    w: 140
+    h: 22
+    props:
+      text: L2 current
+      fontSize: 12
+      color: "#94a3b8"
+      align: center
+  - id: gauge17
+    type: gauge
+    x: 510
+    y: 100
+    w: 200
+    h: 180
+    props:
+      tag: Sites/EnergyMeter/VoltageL3
+      min: 200
+      max: 250
+      label: L3 voltage
+      zones: 200:#f59e0b,215:#22c55e,236:#ef4444
+  - id: bar18
+    type: bar
+    x: 580
+    y: 300
+    w: 60
+    h: 200
+    props:
+      tag: Sites/EnergyMeter/CurrentL3
+      min: 0
+      max: 300
+      color: "#38bdf8"
+  - id: text19
+    type: text
+    x: 540
+    y: 506
+    w: 140
+    h: 22
+    props:
+      text: L3 current
+      fontSize: 12
+      color: "#94a3b8"
+      align: center
+  - id: gauge20
+    type: gauge
+    x: 760
+    y: 100
+    w: 200
+    h: 180
+    props:
+      tag: Sites/EnergyMeter/PowerFactor
+      min: 0.7
+      max: 1
+      label: Power factor
+      decimals: 2
+      zones: 0.7:#ef4444,0.88:#f59e0b,0.95:#22c55e
+  - id: value21
+    type: value
+    x: 740
+    y: 310
+    w: 300
+    h: 34
+    props:
+      tag: Sites/EnergyMeter/ActivePower
+      label: Active power
+      fontSize: 20
+      align: left
+  - id: value22
+    type: value
+    x: 740
+    y: 360
+    w: 300
+    h: 34
+    props:
+      tag: Sites/EnergyMeter/Frequency
+      label: Frequency
+      fontSize: 20
+      align: left
+  - id: value23
+    type: value
+    x: 740
+    y: 410
+    w: 300
+    h: 34
+    props:
+      tag: Sites/EnergyMeter/EnergyToday
+      label: Energy today
+      fontSize: 20
+      align: left
+  - id: sparkline24
+    type: sparkline
+    x: 740
+    y: 470
+    w: 300
+    h: 80
+    props:
+      tag: Sites/EnergyMeter/ActivePower
+      color: "#f97316"
+  - id: gauge25
+    type: gauge
+    x: 1104
+    y: 90
+    w: 150
+    h: 136
+    props:
+      tag: Sites/EnergyMeter/ActivePower
+      min: 0
+      max: 200
+      label: Demand kW
+      decimals: 0
+      zones: 0:#22c55e,120:#f59e0b,140:#ef4444
+  - id: gauge26
+    type: gauge
+    x: 1262
+    y: 90
+    w: 150
+    h: 136
+    props:
+      tag: Sites/EnergyMeter/Frequency
+      min: 49.5
+      max: 50.5
+      label: Hz
+      decimals: 2
+      zones: 49.5:#ef4444,49.8:#22c55e,50.2:#ef4444
+  - id: gauge27
+    type: gauge
+    x: 1420
+    y: 90
+    w: 150
+    h: 136
+    props:
+      tag: Sites/EnergyMeter/PowerFactor
+      min: 0.7
+      max: 1
+      label: cos φ
+      decimals: 2
+      zones: 0.7:#ef4444,0.88:#f59e0b,0.95:#22c55e
+  - id: value28
+    type: value
+    x: 1104
+    y: 250
+    w: 468
+    h: 34
+    props:
+      tag: Sites/EnergyMeter/EnergyToday
+      label: Energy today
+      fontSize: 15
+      align: left
+  - id: trend29
+    type: trend
+    x: 1104
+    y: 356
+    w: 468
+    h: 258
+    props:
+      tags: Sites/EnergyMeter/ActivePower,Sites/EnergyMeter/HVAC,Sites/EnergyMeter/Lighting,Sites/EnergyMeter/Production
+      minutes: 30
+  - id: alarmTable30
+    type: alarmTable
+    x: 16
+    y: 638
+    w: 1064
+    h: 248
+    props:
+      area: Sites/EnergyMeter
+      maxRows: 8
+  - id: barChart31
+    type: barChart
+    x: 1106
+    y: 672
+    w: 466
+    h: 206
+    props:
+      tags: Sites/EnergyMeter/HVAC,Sites/EnergyMeter/Lighting,Sites/EnergyMeter/Production,Sites/EnergyMeter/Office,Sites/EnergyMeter/EVCharging
+      labels: HVAC,Light,Prod.,Office,EV
+      max: 50
+      decimals: 1
+      color: "#a78bfa"
+name: Sites/EnergyMeter

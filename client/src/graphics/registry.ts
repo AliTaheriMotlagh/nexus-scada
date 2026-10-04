@@ -113,3 +113,11 @@ export function parseStates(text: unknown): { value: string; label: string; colo
 export function useSvgId(): string {
   return useId().replace(/[^a-zA-Z0-9]/g, '');
 }
+
+/** Element catalogue sent to the AI assistant (single source of truth = this registry). */
+export function catalogForAi() {
+  return allMetas().map((m) => ({
+    type: m.type, label: m.label, category: m.category, w: m.w, h: m.h, primary: m.primary,
+    props: m.props.map((p) => ({ name: p.name, type: p.type, default: p.default, options: p.options })),
+  }));
+}

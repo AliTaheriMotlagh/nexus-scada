@@ -16,11 +16,11 @@ project:
 
 server:
   port: 8080
-  anonymousRole: viewer        # remove (or set null) to require login for viewing
+  anonymousRole: viewer # remove (or set null) to require login for viewing
   tokenTtlHours: 12
   historianRetentionDays: 30
 
-location: { lat: 35.6892, lng: 51.389 }   # used for @sunrise / @sunset schedules
+location: { lat: 35.6892, lng: 51.389 } # used for @sunrise / @sunset schedules
 startDisplay: Plant/Overview
 
 users:
@@ -142,7 +142,7 @@ nodes:
               - { kind: hi, limit: 9, severity: medium, delay: 2, message: 'Blower vibration high ({value} mm/s)' }
           - { kind: tag, name: BlowerRunning, dataType: boolean, initial: true, writable: true }
           - { kind: tag, name: ProductionCount, source: { fn: counter, step: 1, min: 0, max: 1000000 }, history: { interval: 60 } }
-          - { kind: tag, name: EmergencyStop, dataType: boolean, initial: false, writable: true, writeRole: operator, alarms: [{ kind: on, severity: critical, message: Emergency stop activated }] }
+          - { kind: tag, name: EmergencyStop, dataType: boolean, initial: false, writable: true, writeRole: operator, alarms: [ { kind: on, severity: critical, message: Emergency stop activated } ] }
 
       - kind: device
         name: Utilities
@@ -175,12 +175,12 @@ nodes:
             decimals: 0
             source: { fn: randomWalk, min: 150, max: 4200, step: 120 }
             history: { deadband: 20 }
-            alarms: [{ kind: hi, limit: 4000, severity: medium, delay: 10, message: 'House power demand high ({value} W)' }]
+            alarms: [ { kind: hi, limit: 4000, severity: medium, delay: 10, message: 'House power demand high ({value} W)' } ]
           - { kind: tag, name: SolarPower, unit: W, decimals: 0, source: { fn: sine, min: 0, max: 3200, period: 1200 }, history: true }
           - { kind: tag, name: BatteryLevel, unit: '%', decimals: 0, source: { fn: triangle, min: 20, max: 100, period: 1800 }, history: true }
-          - { kind: tag, name: FrontDoorOpen, dataType: boolean, source: { fn: toggle, period: 240 }, alarms: [{ kind: on, severity: low, delay: 60, message: Front door open for over a minute }] }
+          - { kind: tag, name: FrontDoorOpen, dataType: boolean, source: { fn: toggle, period: 240 }, alarms: [ { kind: on, severity: low, delay: 60, message: Front door open for over a minute } ] }
           - { kind: tag, name: HallwayMotion, dataType: boolean, source: { fn: toggle, period: 47 } }
-          - { kind: tag, name: WaterLeak, dataType: boolean, initial: false, writable: true, alarms: [{ kind: on, severity: critical, message: Water leak detected! }] }
+          - { kind: tag, name: WaterLeak, dataType: boolean, initial: false, writable: true, alarms: [ { kind: on, severity: critical, message: Water leak detected! } ] }
 
       - kind: device
         name: Devices
@@ -245,48 +245,368 @@ nodes:
           - { kind: tag, name: AuditEntries, source: { query: 'SELECT count(*) FROM audit' } }
       - { kind: tag, name: Message, dataType: string, initial: Welcome to Nexus SCADA, writable: true }
       - { kind: tag, name: Heartbeat, dataType: number, initial: 0, writable: true }
+  - kind: folder
+    name: Sites
+    children:
+      - kind: device
+        name: PumpStation
+        driver: simulation
+        description: Simulated equipment (replace driver with modbus-tcp / mqtt / rest for real hardware)
+        settings:
+          intervalMs: 1000
+        children:
+          - { kind: tag, name: WetWellLevel, dataType: number, initial: 50, writable: true, unit: "%", min: 0, max: 100, decimals: 1, writeRole: engineer, history: { deadband: 0.2 }, alarms: [ { kind: hi, limit: 85, severity: high, message: "Wet well level high ({value}%)" }, { kind: hihi, limit: 95, severity: critical, message: "Wet well overflow risk ({value}%)" }, { kind: lo, limit: 10, severity: medium, message: "Wet well level low ({value}%)" } ] }
+          - { kind: tag, name: Inflow, source: { fn: sine, min: 60, max: 200, period: 600, noise: 4 }, dataType: number, history: true, unit: m³/h, decimals: 0 }
+          - { kind: tag, name: Outflow, expression: "(tag('./Pump1/Running') ? tag('./Pump1/Speed') * 0.9 : 0) + (tag('./Pump2/Running') ? tag('./Pump2/Speed') * 0.9 : 0) + (tag('./Pump3/Running') ? tag('./Pump3/Speed') * 0.9 : 0)", history: true, unit: m³/h, decimals: 0 }
+          - { kind: tag, name: DischargePressure, source: { fn: randomWalk, min: 3, max: 6, step: 0.05 }, dataType: number, history: true, unit: bar, decimals: 2, alarms: [ { kind: hi, limit: 5.8, severity: high, message: "Discharge pressure high ({value} bar)", delay: 5 } ] }
+          - { kind: tag, name: Mode, dataType: string, initial: Auto, writable: true, states: { Auto: Automatic, Manual: Manual } }
+          - { kind: tag, name: StartLevel, dataType: number, initial: 70, writable: true, unit: "%", min: 20, max: 95 }
+          - { kind: tag, name: StopLevel, dataType: number, initial: 35, writable: true, unit: "%", min: 5, max: 80 }
+          - kind: folder
+            name: Pump1
+            children:
+              - { kind: tag, name: Running, dataType: boolean, initial: false, writable: true, history: true, states: { "false": Stopped, "true": Running } }
+              - { kind: tag, name: Speed, dataType: number, initial: 75, writable: true, unit: "%", min: 0, max: 100 }
+              - { kind: tag, name: Current, expression: "tag('./Running') ? 8 + tag('./Speed') * 0.32 : 0", history: true, unit: A, decimals: 1, alarms: [ { kind: hi, limit: 40, severity: high, message: "Pump 1 motor overload ({value} A)" } ] }
+              - { kind: tag, name: Fault, dataType: boolean, initial: false, writable: true, alarms: [ { kind: on, severity: high, message: Pump 1 tripped } ] }
+          - kind: folder
+            name: Pump2
+            children:
+              - { kind: tag, name: Running, dataType: boolean, initial: false, writable: true, history: true, states: { "false": Stopped, "true": Running } }
+              - { kind: tag, name: Speed, dataType: number, initial: 75, writable: true, unit: "%", min: 0, max: 100 }
+              - { kind: tag, name: Current, expression: "tag('./Running') ? 8 + tag('./Speed') * 0.32 : 0", history: true, unit: A, decimals: 1, alarms: [ { kind: hi, limit: 40, severity: high, message: "Pump 2 motor overload ({value} A)" } ] }
+              - { kind: tag, name: Fault, dataType: boolean, initial: false, writable: true, alarms: [ { kind: on, severity: high, message: Pump 2 tripped } ] }
+          - kind: folder
+            name: Pump3
+            children:
+              - { kind: tag, name: Running, dataType: boolean, initial: false, writable: true, history: true, states: { "false": Stopped, "true": Running } }
+              - { kind: tag, name: Speed, dataType: number, initial: 75, writable: true, unit: "%", min: 0, max: 100 }
+              - { kind: tag, name: Current, expression: "tag('./Running') ? 8 + tag('./Speed') * 0.32 : 0", history: true, unit: A, decimals: 1, alarms: [ { kind: hi, limit: 40, severity: high, message: "Pump 3 motor overload ({value} A)" } ] }
+              - { kind: tag, name: Fault, dataType: boolean, initial: false, writable: true, alarms: [ { kind: on, severity: high, message: Pump 3 tripped } ] }
+      - kind: device
+        name: AHU1
+        driver: simulation
+        description: Simulated equipment (replace driver with modbus-tcp / mqtt / rest for real hardware)
+        settings:
+          intervalMs: 1000
+        children:
+          - { kind: tag, name: OutsideTemp, source: { fn: sine, min: 2, max: 32, period: 1800 }, dataType: number, history: true, unit: °C, decimals: 1 }
+          - { kind: tag, name: ReturnTemp, source: { fn: sine, min: 21, max: 25, period: 900 }, dataType: number, history: true, unit: °C, decimals: 1 }
+          - { kind: tag, name: OADamper, dataType: number, initial: 30, writable: true, unit: "%", min: 0, max: 100, history: true }
+          - { kind: tag, name: MixedTemp, expression: tag('./OutsideTemp') * tag('./OADamper') / 100 + tag('./ReturnTemp') * (1 - tag('./OADamper') / 100), history: true, unit: °C, decimals: 1 }
+          - { kind: tag, name: HeatingValve, dataType: number, initial: 0, writable: true, unit: "%", min: 0, max: 100, history: true }
+          - { kind: tag, name: CoolingValve, dataType: number, initial: 0, writable: true, unit: "%", min: 0, max: 100, history: true }
+          - { kind: tag, name: SupplyTemp, expression: "tag('./SupplyFan') ? tag('./MixedTemp') + tag('./HeatingValve') * 0.18 - tag('./CoolingValve') * 0.16 : tag('./MixedTemp')", history: true, unit: °C, decimals: 1, alarms: [ { kind: hi, limit: 30, severity: medium, message: "Supply air too warm ({value} °C)", delay: 30 }, { kind: lo, limit: 10, severity: high, message: "Supply air too cold ({value} °C)", delay: 30 } ] }
+          - { kind: tag, name: SupplySetpoint, dataType: number, initial: 18, writable: true, unit: °C, min: 12, max: 26, decimals: 1, history: true }
+          - { kind: tag, name: SupplyFan, dataType: boolean, initial: true, writable: true, history: true }
+          - { kind: tag, name: FanSpeed, dataType: number, initial: 70, writable: true, unit: "%", min: 20, max: 100 }
+          - { kind: tag, name: ReturnFan, dataType: boolean, initial: true, writable: true }
+          - { kind: tag, name: FilterDP, source: { fn: randomWalk, min: 80, max: 280, step: 3 }, dataType: number, history: true, unit: Pa, decimals: 0, alarms: [ { kind: hi, limit: 250, severity: low, message: "Filter dirty — replace ({value} Pa)" } ] }
+          - { kind: tag, name: CO2, source: { fn: randomWalk, min: 420, max: 1300, step: 15 }, dataType: number, history: true, unit: ppm, decimals: 0, alarms: [ { kind: hi, limit: 1100, severity: medium, message: "CO₂ high in zone ({value} ppm)", delay: 20 } ] }
+          - { kind: tag, name: FrostAlarm, expression: tag('./MixedTemp') < 4, history: false, dataType: boolean, alarms: [ { kind: on, severity: critical, message: Frost protection — coil at risk } ] }
+      - kind: device
+        name: SolarPlant
+        driver: simulation
+        description: Simulated equipment (replace driver with modbus-tcp / mqtt / rest for real hardware)
+        settings:
+          intervalMs: 1000
+        children:
+          - { kind: tag, name: Irradiance, source: { fn: sine, min: 0, max: 1000, period: 1800, noise: 15 }, dataType: number, history: true, unit: W/m², decimals: 0 }
+          - { kind: tag, name: PVPower, expression: "Math.max(0, tag('./Irradiance') * 8.2)", history: true, unit: W, decimals: 0 }
+          - { kind: tag, name: LoadPower, source: { fn: randomWalk, min: 400, max: 6500, step: 150 }, dataType: number, history: true, unit: W, decimals: 0 }
+          - { kind: tag, name: BatterySOC, dataType: number, initial: 55, writable: true, unit: "%", min: 0, max: 100, decimals: 0, writeRole: engineer, history: true, alarms: [ { kind: lo, limit: 15, severity: medium, message: "Battery state of charge low ({value}%)" } ] }
+          - { kind: tag, name: BatteryPower, dataType: number, initial: 0, writable: true, unit: W, decimals: 0, writeRole: engineer, history: true, description: + charging / − discharging }
+          - { kind: tag, name: GridPower, expression: tag('./LoadPower') - tag('./PVPower') + tag('./BatteryPower'), history: true, unit: W, decimals: 0, description: + import / − export }
+          - { kind: tag, name: InverterTemp, expression: 28 + tag('./PVPower') / 380, history: true, unit: °C, decimals: 1, alarms: [ { kind: hi, limit: 48, severity: high, message: "Inverter temperature high ({value} °C)" } ] }
+          - { kind: tag, name: EnergyToday, dataType: number, initial: 0, writable: true, unit: kWh, decimals: 1, writeRole: engineer, history: true }
+          - { kind: tag, name: Reserve, dataType: number, initial: 20, writable: true, unit: "%", min: 0, max: 80 }
+          - { kind: tag, name: ChargeLimit, dataType: number, initial: 5000, writable: true, unit: W, min: 0, max: 10000 }
+      - kind: device
+        name: BoilerHouse
+        driver: simulation
+        description: Simulated equipment (replace driver with modbus-tcp / mqtt / rest for real hardware)
+        settings:
+          intervalMs: 1000
+        children:
+          - { kind: tag, name: HeaderPressure, dataType: number, initial: 9, writable: true, unit: bar, decimals: 2, writeRole: engineer, history: true, alarms: [ { kind: hi, limit: 10.5, severity: high, message: "Steam header pressure high ({value} bar)" }, { kind: lo, limit: 7, severity: medium, message: "Steam header pressure low ({value} bar)" } ] }
+          - { kind: tag, name: PressureSetpoint, dataType: number, initial: 9, writable: true, unit: bar, min: 6, max: 10.5, decimals: 1 }
+          - { kind: tag, name: SteamDemand, source: { fn: randomWalk, min: 2, max: 9, step: 0.2 }, dataType: number, history: true, unit: t/h, decimals: 1 }
+          - kind: folder
+            name: Boiler1
+            children:
+              - { kind: tag, name: Enabled, dataType: boolean, initial: true, writable: true }
+              - { kind: tag, name: Firing, dataType: boolean, initial: true, writable: true }
+              - { kind: tag, name: Modulation, dataType: number, initial: 50, writable: true, unit: "%", min: 0, max: 100, history: true }
+              - { kind: tag, name: DrumLevel, source: { fn: sine, min: 42, max: 68, period: 370 }, dataType: number, history: true, unit: "%", decimals: 0, alarms: [ { kind: lo, limit: 35, severity: critical, message: Boiler 1 low water level } ] }
+              - { kind: tag, name: FlueTemp, expression: "tag('./Firing') ? 140 + tag('./Modulation') * 0.9 : 60", history: true, unit: °C, decimals: 0, alarms: [ { kind: hi, limit: 225, severity: medium, message: Boiler 1 flue gas temperature high } ] }
+              - { kind: tag, name: SteamOutput, expression: "tag('./Firing') ? tag('./Modulation') * 0.06 : 0", history: true, unit: t/h, decimals: 2 }
+          - kind: folder
+            name: Boiler2
+            children:
+              - { kind: tag, name: Enabled, dataType: boolean, initial: true, writable: true }
+              - { kind: tag, name: Firing, dataType: boolean, initial: false, writable: true }
+              - { kind: tag, name: Modulation, dataType: number, initial: 0, writable: true, unit: "%", min: 0, max: 100, history: true }
+              - { kind: tag, name: DrumLevel, source: { fn: sine, min: 42, max: 68, period: 440 }, dataType: number, history: true, unit: "%", decimals: 0, alarms: [ { kind: lo, limit: 35, severity: critical, message: Boiler 2 low water level } ] }
+              - { kind: tag, name: FlueTemp, expression: "tag('./Firing') ? 140 + tag('./Modulation') * 0.9 : 60", history: true, unit: °C, decimals: 0, alarms: [ { kind: hi, limit: 225, severity: medium, message: Boiler 2 flue gas temperature high } ] }
+              - { kind: tag, name: SteamOutput, expression: "tag('./Firing') ? tag('./Modulation') * 0.06 : 0", history: true, unit: t/h, decimals: 2 }
+          - { kind: tag, name: FeedPump, dataType: boolean, initial: true, writable: true, history: true }
+          - { kind: tag, name: GasFlow, expression: "(tag('./Boiler1/Firing') ? tag('./Boiler1/Modulation') * 4.2 : 0) + (tag('./Boiler2/Firing') ? tag('./Boiler2/Modulation') * 4.2 : 0)", history: true, unit: m³/h, decimals: 0 }
+      - kind: device
+        name: TankFarm
+        driver: simulation
+        description: Simulated equipment (replace driver with modbus-tcp / mqtt / rest for real hardware)
+        settings:
+          intervalMs: 1000
+        children:
+          - kind: folder
+            name: T1
+            children:
+              - { kind: tag, name: Product, dataType: string, initial: Diesel, writable: true }
+              - { kind: tag, name: Capacity, dataType: number, initial: 500, writable: true, unit: m³, writeRole: engineer }
+              - { kind: tag, name: Level, source: { fn: sine, min: 8, max: 92, period: 600, phase: 0 }, dataType: number, history: true, unit: "%", decimals: 1, alarms: [ { kind: hi, limit: 90, severity: high, message: "Tank T1 high level ({value}%)" }, { kind: lo, limit: 10, severity: medium, message: "Tank T1 low level ({value}%)" } ] }
+              - { kind: tag, name: Temperature, source: { fn: sine, min: 12, max: 24, period: 1200 }, dataType: number, history: true, unit: °C, decimals: 1 }
+              - { kind: tag, name: Volume, expression: tag('./Level') / 100 * tag('./Capacity'), history: true, unit: m³, decimals: 0 }
+          - kind: folder
+            name: T2
+            children:
+              - { kind: tag, name: Product, dataType: string, initial: Gasoline, writable: true }
+              - { kind: tag, name: Capacity, dataType: number, initial: 500, writable: true, unit: m³, writeRole: engineer }
+              - { kind: tag, name: Level, source: { fn: sine, min: 12, max: 89, period: 770, phase: 1 }, dataType: number, history: true, unit: "%", decimals: 1, alarms: [ { kind: hi, limit: 90, severity: high, message: "Tank T2 high level ({value}%)" }, { kind: lo, limit: 10, severity: medium, message: "Tank T2 low level ({value}%)" } ] }
+              - { kind: tag, name: Temperature, source: { fn: sine, min: 13, max: 25, period: 1200 }, dataType: number, history: true, unit: °C, decimals: 1 }
+              - { kind: tag, name: Volume, expression: tag('./Level') / 100 * tag('./Capacity'), history: true, unit: m³, decimals: 0 }
+          - kind: folder
+            name: T3
+            children:
+              - { kind: tag, name: Product, dataType: string, initial: Jet A-1, writable: true }
+              - { kind: tag, name: Capacity, dataType: number, initial: 800, writable: true, unit: m³, writeRole: engineer }
+              - { kind: tag, name: Level, source: { fn: sine, min: 16, max: 86, period: 940, phase: 2 }, dataType: number, history: true, unit: "%", decimals: 1, alarms: [ { kind: hi, limit: 90, severity: high, message: "Tank T3 high level ({value}%)" }, { kind: lo, limit: 10, severity: medium, message: "Tank T3 low level ({value}%)" } ] }
+              - { kind: tag, name: Temperature, source: { fn: sine, min: 14, max: 26, period: 1200 }, dataType: number, history: true, unit: °C, decimals: 1 }
+              - { kind: tag, name: Volume, expression: tag('./Level') / 100 * tag('./Capacity'), history: true, unit: m³, decimals: 0 }
+          - kind: folder
+            name: T4
+            children:
+              - { kind: tag, name: Product, dataType: string, initial: Water, writable: true }
+              - { kind: tag, name: Capacity, dataType: number, initial: 300, writable: true, unit: m³, writeRole: engineer }
+              - { kind: tag, name: Level, source: { fn: sine, min: 20, max: 83, period: 1110, phase: 3 }, dataType: number, history: true, unit: "%", decimals: 1, alarms: [ { kind: hi, limit: 90, severity: high, message: "Tank T4 high level ({value}%)" }, { kind: lo, limit: 10, severity: medium, message: "Tank T4 low level ({value}%)" } ] }
+              - { kind: tag, name: Temperature, source: { fn: sine, min: 15, max: 27, period: 1200 }, dataType: number, history: true, unit: °C, decimals: 1 }
+              - { kind: tag, name: Volume, expression: tag('./Level') / 100 * tag('./Capacity'), history: true, unit: m³, decimals: 0 }
+          - { kind: tag, name: TotalVolume, expression: tag('./T1/Volume') + tag('./T2/Volume') + tag('./T3/Volume') + tag('./T4/Volume'), history: true, unit: m³, decimals: 0 }
+      - kind: device
+        name: ColdStore
+        driver: simulation
+        description: Simulated equipment (replace driver with modbus-tcp / mqtt / rest for real hardware)
+        settings:
+          intervalMs: 1000
+        children:
+          - kind: folder
+            name: Freezer1
+            children:
+              - { kind: tag, name: Temperature, source: { fn: sine, min: -24, max: -18, period: 700, noise: 0.15 }, dataType: number, history: true, unit: °C, decimals: 1, alarms: [ { kind: hi, limit: -18.6, severity: high, message: "Freezer1 temperature high ({value} °C)", delay: 30, deadband: 0.3 } ] }
+              - { kind: tag, name: Setpoint, dataType: number, initial: -21, writable: true, unit: °C, min: -30, max: 15, decimals: 1 }
+              - { kind: tag, name: DoorOpen, source: { fn: toggle, min: 0, max: 1, period: 200 }, dataType: boolean, history: false, alarms: [ { kind: on, severity: low, message: Freezer1 door open too long, delay: 45 } ] }
+          - kind: folder
+            name: Freezer2
+            children:
+              - { kind: tag, name: Temperature, source: { fn: sine, min: -22, max: -17, period: 830, noise: 0.15 }, dataType: number, history: true, unit: °C, decimals: 1, alarms: [ { kind: hi, limit: -17.6, severity: high, message: "Freezer2 temperature high ({value} °C)", delay: 30, deadband: 0.3 } ] }
+              - { kind: tag, name: Setpoint, dataType: number, initial: -19, writable: true, unit: °C, min: -30, max: 15, decimals: 1 }
+              - { kind: tag, name: DoorOpen, source: { fn: toggle, min: 0, max: 1, period: 277 }, dataType: boolean, history: false, alarms: [ { kind: on, severity: low, message: Freezer2 door open too long, delay: 45 } ] }
+          - kind: folder
+            name: Chiller
+            children:
+              - { kind: tag, name: Temperature, source: { fn: sine, min: 1, max: 5, period: 960, noise: 0.15 }, dataType: number, history: true, unit: °C, decimals: 1, alarms: [ { kind: hi, limit: 4.4, severity: high, message: "Chiller temperature high ({value} °C)", delay: 30, deadband: 0.3 } ] }
+              - { kind: tag, name: Setpoint, dataType: number, initial: 3, writable: true, unit: °C, min: -30, max: 15, decimals: 1 }
+              - { kind: tag, name: DoorOpen, source: { fn: toggle, min: 0, max: 1, period: 354 }, dataType: boolean, history: false, alarms: [ { kind: on, severity: low, message: Chiller door open too long, delay: 45 } ] }
+          - kind: folder
+            name: Dock
+            children:
+              - { kind: tag, name: Temperature, source: { fn: sine, min: 8, max: 14, period: 1090, noise: 0.15 }, dataType: number, history: true, unit: °C, decimals: 1, alarms: [ { kind: hi, limit: 13.4, severity: high, message: "Dock temperature high ({value} °C)", delay: 30, deadband: 0.3 } ] }
+              - { kind: tag, name: Setpoint, dataType: number, initial: 11, writable: true, unit: °C, min: -30, max: 15, decimals: 1 }
+              - { kind: tag, name: DoorOpen, source: { fn: toggle, min: 0, max: 1, period: 431 }, dataType: boolean, history: false, alarms: [ { kind: on, severity: low, message: Dock door open too long, delay: 45 } ] }
+          - { kind: tag, name: Compressor1, source: { fn: toggle, min: 0, max: 1, period: 420 }, dataType: boolean, history: true }
+          - { kind: tag, name: Compressor2, source: { fn: toggle, min: 0, max: 1, period: 610 }, dataType: boolean, history: true }
+          - { kind: tag, name: SuctionPressure, source: { fn: randomWalk, min: 0.8, max: 2.6, step: 0.04 }, dataType: number, history: true, unit: bar, decimals: 2 }
+      - kind: device
+        name: Greenhouse
+        driver: simulation
+        description: Simulated equipment (replace driver with modbus-tcp / mqtt / rest for real hardware)
+        settings:
+          intervalMs: 1000
+        children:
+          - { kind: tag, name: AirTemp, source: { fn: sine, min: 15, max: 34, period: 1200, noise: 0.2 }, dataType: number, history: true, unit: °C, decimals: 1, alarms: [ { kind: hi, limit: 33, severity: high, message: "Greenhouse too hot ({value} °C)" }, { kind: lo, limit: 12, severity: critical, message: "Frost risk ({value} °C)" } ] }
+          - { kind: tag, name: Humidity, source: { fn: randomWalk, min: 45, max: 92, step: 1 }, dataType: number, history: true, unit: "%", decimals: 0, alarms: [ { kind: hi, limit: 90, severity: low, message: Humidity high — fungal risk, delay: 60 } ] }
+          - { kind: tag, name: SoilMoisture, dataType: number, initial: 40, writable: true, unit: "%", decimals: 1, writeRole: engineer, history: true, alarms: [ { kind: lo, limit: 22, severity: medium, message: "Soil too dry ({value}%)" } ] }
+          - { kind: tag, name: Light, source: { fn: sine, min: 0, max: 60000, period: 1800 }, dataType: number, history: true, unit: lx, decimals: 0 }
+          - { kind: tag, name: CO2, source: { fn: randomWalk, min: 380, max: 1100, step: 12 }, dataType: number, history: true, unit: ppm, decimals: 0 }
+          - { kind: tag, name: WaterTank, dataType: number, initial: 80, writable: true, unit: "%", decimals: 0, writeRole: engineer, history: true, alarms: [ { kind: lo, limit: 15, severity: medium, message: Irrigation water tank low } ] }
+          - { kind: tag, name: Auto, dataType: boolean, initial: true, writable: true }
+          - { kind: tag, name: Vents, dataType: number, initial: 10, writable: true, unit: "%", min: 0, max: 100, history: true }
+          - { kind: tag, name: Irrigation, dataType: boolean, initial: false, writable: true, history: true }
+          - { kind: tag, name: GrowLights, dataType: boolean, initial: false, writable: true, history: true }
+          - { kind: tag, name: Heater, dataType: boolean, initial: false, writable: true, history: true }
+          - { kind: tag, name: Fans, dataType: boolean, initial: false, writable: true }
+      - kind: device
+        name: Line1
+        driver: simulation
+        description: Simulated equipment (replace driver with modbus-tcp / mqtt / rest for real hardware)
+        settings:
+          intervalMs: 1000
+        children:
+          - { kind: tag, name: Running, dataType: boolean, initial: true, writable: true, history: true }
+          - { kind: tag, name: Speed, dataType: number, initial: 120, writable: true, unit: bpm, min: 0, max: 150, history: true }
+          - { kind: tag, name: State, dataType: string, initial: Running, writable: true, states: { Running: Running, Stopped: Stopped, Fault: Fault, Starved: Starved }, alarms: [ { kind: equals, limit: Fault, severity: high, message: Line stopped on fault } ] }
+          - { kind: tag, name: FaultStation, dataType: string, initial: "", writable: true }
+          - { kind: tag, name: Good, dataType: number, initial: 0, writable: true, writeRole: operator, history: { interval: 60 } }
+          - { kind: tag, name: Rejects, dataType: number, initial: 0, writable: true, writeRole: operator, history: { interval: 60 } }
+          - { kind: tag, name: RunSeconds, dataType: number, initial: 1, writable: true, writeRole: operator }
+          - { kind: tag, name: TotalSeconds, dataType: number, initial: 1, writable: true, writeRole: operator }
+          - { kind: tag, name: Availability, expression: "tag('./RunSeconds') / Math.max(1, tag('./TotalSeconds')) * 100", history: true, unit: "%", decimals: 1 }
+          - { kind: tag, name: Performance, expression: tag('./Speed') / 150 * 100, history: true, unit: "%", decimals: 1 }
+          - { kind: tag, name: Quality, expression: "tag('./Good') / Math.max(1, tag('./Good') + tag('./Rejects')) * 100", history: true, unit: "%", decimals: 1 }
+          - { kind: tag, name: OEE, expression: tag('./Availability') * tag('./Performance') * tag('./Quality') / 10000, history: true, unit: "%", decimals: 1, alarms: [ { kind: lo, limit: 60, severity: low, message: "OEE below target ({value}%)", delay: 60 } ] }
+          - { kind: tag, name: FillerTemp, source: { fn: sine, min: 18, max: 26, period: 900 }, dataType: number, history: true, unit: °C, decimals: 1 }
+      - kind: device
+        name: EnergyMeter
+        driver: simulation
+        description: Simulated equipment (replace driver with modbus-tcp / mqtt / rest for real hardware)
+        settings:
+          intervalMs: 1000
+        children:
+          - { kind: tag, name: VoltageL1, source: { fn: randomWalk, min: 224, max: 238, step: 0.6 }, dataType: number, history: true, unit: V, decimals: 1, alarms: [ { kind: hi, limit: 236, severity: low, message: Overvoltage L1, delay: 10 } ] }
+          - { kind: tag, name: VoltageL2, source: { fn: randomWalk, min: 224, max: 238, step: 0.6 }, dataType: number, history: true, unit: V, decimals: 1, alarms: [ { kind: hi, limit: 236, severity: low, message: Overvoltage L2, delay: 10 } ] }
+          - { kind: tag, name: VoltageL3, source: { fn: randomWalk, min: 224, max: 238, step: 0.6 }, dataType: number, history: true, unit: V, decimals: 1, alarms: [ { kind: hi, limit: 236, severity: low, message: Overvoltage L3, delay: 10 } ] }
+          - { kind: tag, name: CurrentL1, source: { fn: randomWalk, min: 60, max: 240, step: 6 }, dataType: number, history: true, unit: A, decimals: 0 }
+          - { kind: tag, name: CurrentL2, source: { fn: randomWalk, min: 60, max: 240, step: 6 }, dataType: number, history: true, unit: A, decimals: 0 }
+          - { kind: tag, name: CurrentL3, source: { fn: randomWalk, min: 60, max: 240, step: 6 }, dataType: number, history: true, unit: A, decimals: 0 }
+          - { kind: tag, name: PowerFactor, source: { fn: randomWalk, min: 0.84, max: 0.99, step: 0.006 }, dataType: number, history: true, unit: "", decimals: 3, alarms: [ { kind: lo, limit: 0.88, severity: medium, message: "Poor power factor ({value})", delay: 20 } ] }
+          - { kind: tag, name: Frequency, source: { fn: randomWalk, min: 49.9, max: 50.1, step: 0.01 }, dataType: number, history: true, unit: Hz, decimals: 2 }
+          - { kind: tag, name: ActivePower, expression: (tag('./VoltageL1') * tag('./CurrentL1') + tag('./VoltageL2') * tag('./CurrentL2') + tag('./VoltageL3') * tag('./CurrentL3')) * tag('./PowerFactor') / 1000, history: true, unit: kW, decimals: 1, alarms: [ { kind: hi, limit: 140, severity: high, message: "Demand above contract ({value} kW)", delay: 30 } ] }
+          - { kind: tag, name: EnergyToday, source: { fn: counter, min: 0, max: 1000000000, step: 0.03 }, dataType: number, history: true, unit: kWh, decimals: 1 }
+          - { kind: tag, name: HVAC, source: { fn: randomWalk, min: 2, max: 18, step: 0.8 }, dataType: number, history: true, unit: kW, decimals: 1 }
+          - { kind: tag, name: Lighting, source: { fn: randomWalk, min: 3, max: 24, step: 0.8 }, dataType: number, history: true, unit: kW, decimals: 1 }
+          - { kind: tag, name: Production, source: { fn: randomWalk, min: 4, max: 30, step: 0.8 }, dataType: number, history: true, unit: kW, decimals: 1 }
+          - { kind: tag, name: Office, source: { fn: randomWalk, min: 5, max: 36, step: 0.8 }, dataType: number, history: true, unit: kW, decimals: 1 }
+          - { kind: tag, name: EVCharging, source: { fn: randomWalk, min: 6, max: 42, step: 0.8 }, dataType: number, history: true, unit: kW, decimals: 1 }
+      - kind: device
+        name: MyHome
+        driver: simulation
+        description: Simulated equipment (replace driver with modbus-tcp / mqtt / rest for real hardware)
+        settings:
+          intervalMs: 1000
+        children:
+          - { kind: tag, name: LivingLight, dataType: boolean, initial: false, writable: true, history: true }
+          - { kind: tag, name: KitchenLight, dataType: boolean, initial: false, writable: true, history: true }
+          - { kind: tag, name: BedroomLight, dataType: boolean, initial: false, writable: true, history: true }
+          - { kind: tag, name: PorchLight, dataType: boolean, initial: false, writable: true, history: true }
+          - { kind: tag, name: Temperature, source: { fn: sine, min: 19, max: 24, period: 900 }, dataType: number, history: true, unit: °C, decimals: 1 }
+          - { kind: tag, name: Setpoint, dataType: number, initial: 21, writable: true, unit: °C, min: 15, max: 27, decimals: 1 }
+          - { kind: tag, name: Heating, expression: tag('./Temperature') < tag('./Setpoint') - 0.3, history: true, dataType: boolean }
+          - { kind: tag, name: Garage, dataType: boolean, initial: false, writable: true }
+          - { kind: tag, name: AlarmArmed, dataType: boolean, initial: false, writable: true }
+          - { kind: tag, name: FrontDoor, source: { fn: toggle, min: 0, max: 1, period: 300 }, dataType: boolean, history: false }
+          - { kind: tag, name: Power, source: { fn: randomWalk, min: 150, max: 4200, step: 120 }, dataType: number, history: true, unit: W, decimals: 0 }
+      - kind: device
+        name: ali
+        driver: simulation
+        description: Simulated equipment (replace driver with modbus-tcp / mqtt / rest for real hardware)
+        settings:
+          intervalMs: 1000
+        children:
+          - { kind: tag, name: AirTemp, source: { fn: sine, min: 15, max: 34, period: 1200, noise: 0.2 }, dataType: number, history: true, unit: °C, decimals: 1, alarms: [ { kind: hi, limit: 33, severity: high, message: "Greenhouse too hot ({value} °C)" }, { kind: lo, limit: 12, severity: critical, message: "Frost risk ({value} °C)" } ] }
+          - { kind: tag, name: Humidity, source: { fn: randomWalk, min: 45, max: 92, step: 1 }, dataType: number, history: true, unit: "%", decimals: 0, alarms: [ { kind: hi, limit: 90, severity: low, message: Humidity high — fungal risk, delay: 60 } ] }
+          - { kind: tag, name: SoilMoisture, dataType: number, initial: 40, writable: true, unit: "%", decimals: 1, writeRole: engineer, history: true, alarms: [ { kind: lo, limit: 22, severity: medium, message: "Soil too dry ({value}%)" } ] }
+          - { kind: tag, name: Light, source: { fn: sine, min: 0, max: 60000, period: 1800 }, dataType: number, history: true, unit: lx, decimals: 0 }
+          - { kind: tag, name: CO2, source: { fn: randomWalk, min: 380, max: 1100, step: 12 }, dataType: number, history: true, unit: ppm, decimals: 0 }
+          - { kind: tag, name: WaterTank, dataType: number, initial: 80, writable: true, unit: "%", decimals: 0, writeRole: engineer, history: true, alarms: [ { kind: lo, limit: 15, severity: medium, message: Irrigation water tank low } ] }
+          - { kind: tag, name: Auto, dataType: boolean, initial: true, writable: true }
+          - { kind: tag, name: Vents, dataType: number, initial: 10, writable: true, unit: "%", min: 0, max: 100, history: true }
+          - { kind: tag, name: Irrigation, dataType: boolean, initial: false, writable: true, history: true }
+          - { kind: tag, name: GrowLights, dataType: boolean, initial: false, writable: true, history: true }
+          - { kind: tag, name: Heater, dataType: boolean, initial: false, writable: true, history: true }
+          - { kind: tag, name: Fans, dataType: boolean, initial: false, writable: true }
 
 # ─────────────────────────── Server scripts (TypeScript) ───────────────────────────
 scripts:
   - name: Startup
     file: Startup.ts
     description: Runs once when the runtime starts
-    triggers: [{ type: startup }]
+    triggers: [ { type: startup } ]
   - name: ProcessModel
     file: ProcessModel.ts
     description: Mass-balance model that fills/drains the tanks
-    triggers: [{ type: interval, ms: 500 }]
+    triggers: [ { type: interval, ms: 500 } ]
   - name: TankControl
     file: TankControl.ts
     description: Automatic level control for tanks in Auto mode
-    triggers: [{ type: tagChange, tags: [Plant/Area1/Tank1/Level, Plant/Area1/Tank2/Level, Plant/Area1/Tank1/Mode, Plant/Area1/Tank2/Mode] }]
+    triggers: [ { type: tagChange, tags: [ Plant/Area1/Tank1/Level, Plant/Area1/Tank2/Level, Plant/Area1/Tank1/Mode, Plant/Area1/Tank2/Mode ] } ]
   - name: Interlocks
     file: Interlocks.ts
     description: Safety interlocks (emergency stop, dry-run protection)
-    triggers: [{ type: tagChange, tags: ['Plant/Area1/*'] }]
+    triggers: [ { type: tagChange, tags: [ 'Plant/Area1/*' ] } ]
   - name: Thermostat
     file: Thermostat.ts
     description: Home heating control with away mode
-    triggers: [{ type: interval, ms: 5000 }, { type: tagChange, tags: [Home/Devices/ThermostatSetpoint, Home/Devices/AwayMode] }]
+    triggers: [ { type: interval, ms: 5000 }, { type: tagChange, tags: [ Home/Devices/ThermostatSetpoint, Home/Devices/AwayMode ] } ]
   - name: MotionLight
     file: MotionLight.ts
     description: Hallway light follows motion with a 60 s off-delay
-    triggers: [{ type: tagChange, tags: [Home/Sensors/HallwayMotion] }, { type: interval, ms: 5000 }]
+    triggers: [ { type: tagChange, tags: [ Home/Sensors/HallwayMotion ] }, { type: interval, ms: 5000 } ]
   - name: AlarmNotifier
     file: AlarmNotifier.ts
     description: Push critical alarms to phones
-    triggers: [{ type: alarm, minSeverity: critical }]
+    triggers: [ { type: alarm, minSeverity: critical } ]
   - name: HourlyReport
     file: HourlyReport.ts
     description: Hourly KPI report stored in the database
-    triggers: [{ type: cron, cron: '0 * * * *' }, { type: manual }]
+    triggers: [ { type: cron, cron: '0 * * * *' }, { type: manual } ]
+  - name: PumpStationControl
+    file: PumpStationControl.ts
+    description: Wet-well model + lead/lag pump control with fail-over
+    enabled: true
+    triggers:
+      - { type: interval, ms: 1000 }
+  - name: AHU1Control
+    file: AHU1Control.ts
+    description: Sequenced heating/cooling valves + CO₂ demand ventilation
+    enabled: true
+    triggers:
+      - { type: interval, ms: 2000 }
+  - name: SolarPlantStrategy
+    file: SolarPlantStrategy.ts
+    description: Battery self-consumption strategy (time accelerated ×60 for the demo)
+    enabled: true
+    triggers:
+      - { type: interval, ms: 2000 }
+  - name: BoilerHouseControl
+    file: BoilerHouseControl.ts
+    description: Header pressure model + burner modulation + lead/lag firing
+    enabled: true
+    triggers:
+      - { type: interval, ms: 1000 }
+  - name: GreenhouseClimate
+    file: GreenhouseClimate.ts
+    description: Soil-moisture model + automatic climate & irrigation control
+    enabled: true
+    triggers:
+      - { type: interval, ms: 2000 }
+  - name: Line1Model
+    file: Line1Model.ts
+    description: Production counters, random stops and OEE time base
+    enabled: true
+    triggers:
+      - { type: interval, ms: 1000 }
+  - name: aliClimate
+    file: aliClimate.ts
+    description: Soil-moisture model + automatic climate & irrigation control
+    enabled: true
+    triggers:
+      - { type: interval, ms: 2000 }
 
 # ─────────────────────────── Schedules (cron, @every, @sunrise/@sunset ± offset) ───────────────────────────
 schedules:
   - name: EveningLights
     cron: '@sunset-15m'
     description: Living room light on shortly before sunset
-    actions: [{ write: Home/Devices/LivingRoomLight, value: true }]
+    actions: [ { write: Home/Devices/LivingRoomLight, value: true } ]
   - name: NightOff
     cron: '30 23 * * *'
     actions:
@@ -295,10 +615,10 @@ schedules:
       - { write: Home/Devices/BedroomLight, value: false }
   - name: WeekdayMorningHeat
     cron: '0 6 * * 1-5'
-    actions: [{ write: Home/Devices/ThermostatSetpoint, value: 21.5 }]
+    actions: [ { write: Home/Devices/ThermostatSetpoint, value: 21.5 } ]
   - name: Heartbeat
     cron: '@every 10s'
-    actions: [{ script: HourlyReport }]
+    actions: [ { script: HourlyReport } ]
     enabled: false
 
 # ─────────────────────────── Recipes ───────────────────────────
@@ -321,14 +641,14 @@ notifications:
   # - { name: telegram, type: telegram, token: '123:ABC', chatId: '42', minSeverity: high }
   # - { name: ops, type: slack, url: 'https://hooks.slack.com/services/...', minSeverity: high }
 
-# ─────────────────────────── GIS map ───────────────────────────
+  # ─────────────────────────── GIS map ───────────────────────────
 map:
-  center: [35.7, 51.39]
+  center: [ 35.7, 51.39 ]
   zoom: 11
   tileUrl: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
   attribution: '© OpenStreetMap contributors'
   markers:
-    - { id: plant, name: Water Treatment Plant, lat: 35.7219, lng: 51.3347, path: Plant/Area1, icon: factory, display: Plant/Overview, tags: [Plant/Area1/Tank1/Level, Plant/Area1/Flow, Plant/Area1/Pressure] }
-    - { id: home, name: Smart Home, lat: 35.7575, lng: 51.4102, path: Home, icon: home, display: Home/Dashboard, tags: [Home/Sensors/LivingRoomTemp, Home/Sensors/Power, Home/Sensors/SolarPower] }
-    - { id: reservoir, name: Treated Water Reservoir, lat: 35.6731, lng: 51.4410, path: Plant/Area1/Tank2, icon: tank, tags: [Plant/Area1/Tank2/Level, Plant/Area1/Tank2/Temperature] }
-    - { id: pumpstation, name: Remote Pump Station, lat: 35.6420, lng: 51.3200, path: Plant/Utilities, icon: pump, tags: [Plant/Utilities/CompressorPressure] }
+    - { id: plant, name: Water Treatment Plant, lat: 35.7219, lng: 51.3347, path: Plant/Area1, icon: factory, display: Plant/Overview, tags: [ Plant/Area1/Tank1/Level, Plant/Area1/Flow, Plant/Area1/Pressure ] }
+    - { id: home, name: Smart Home, lat: 35.7575, lng: 51.4102, path: Home, icon: home, display: Home/Dashboard, tags: [ Home/Sensors/LivingRoomTemp, Home/Sensors/Power, Home/Sensors/SolarPower ] }
+    - { id: reservoir, name: Treated Water Reservoir, lat: 35.6731, lng: 51.4410, path: Plant/Area1/Tank2, icon: tank, tags: [ Plant/Area1/Tank2/Level, Plant/Area1/Tank2/Temperature ] }
+    - { id: pumpstation, name: Remote Pump Station, lat: 35.6420, lng: 51.3200, path: Plant/Utilities, icon: pump, tags: [ Plant/Utilities/CompressorPressure ] }

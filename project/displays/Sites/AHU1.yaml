@@ -1,0 +1,555 @@
+title: HVAC air-handling unit
+kind: page
+width: 1600
+height: 900
+background: "#0f1722"
+grid: 10
+elements:
+  - id: text1
+    type: text
+    x: 24
+    y: 12
+    w: 800
+    h: 43
+    props:
+      text: HVAC air-handling unit
+      fontSize: 24
+      color: "#e2e8f0"
+      fontWeight: "700"
+  - id: clock2
+    type: clock
+    x: 1400
+    y: 16
+    w: 180
+    h: 32
+    props:
+      format: datetime
+      fontSize: 14
+      color: "#94a3b8"
+  - id: rect3
+    type: rect
+    x: 16
+    y: 60
+    w: 1064
+    h: 566
+    props:
+      fill: "#111b27"
+      stroke: "#233244"
+      radius: 10
+    locked: true
+  - id: text4
+    type: text
+    x: 30
+    y: 66
+    w: 1036
+    h: 22
+    props:
+      text: AIR-HANDLING UNIT
+      fontSize: 12
+      color: "#64748b"
+      fontWeight: "700"
+  - id: rect5
+    type: rect
+    x: 1092
+    y: 60
+    w: 492
+    h: 254
+    props:
+      fill: "#111b27"
+      stroke: "#233244"
+      radius: 10
+    locked: true
+  - id: text6
+    type: text
+    x: 1106
+    y: 66
+    w: 464
+    h: 22
+    props:
+      text: KEY FIGURES
+      fontSize: 12
+      color: "#64748b"
+      fontWeight: "700"
+  - id: rect7
+    type: rect
+    x: 1092
+    y: 326
+    w: 492
+    h: 300
+    props:
+      fill: "#111b27"
+      stroke: "#233244"
+      radius: 10
+    locked: true
+  - id: text8
+    type: text
+    x: 1106
+    y: 332
+    w: 464
+    h: 22
+    props:
+      text: TREND — 15 MIN
+      fontSize: 12
+      color: "#64748b"
+      fontWeight: "700"
+  - id: rect9
+    type: rect
+    x: 1092
+    y: 638
+    w: 492
+    h: 248
+    props:
+      fill: "#111b27"
+      stroke: "#233244"
+      radius: 10
+    locked: true
+  - id: text10
+    type: text
+    x: 1106
+    y: 644
+    w: 464
+    h: 22
+    props:
+      text: OPERATOR CONTROLS
+      fontSize: 12
+      color: "#64748b"
+      fontWeight: "700"
+  - id: rect11
+    type: rect
+    x: 60
+    y: 200
+    w: 980
+    h: 120
+    props:
+      fill: "#1e293b"
+      stroke: "#334155"
+      radius: 4
+      gradient: true
+    locked: true
+  - id: text12
+    type: text
+    x: 64
+    y: 330
+    w: 200
+    h: 22
+    props:
+      text: ◂ Outside air
+      fontSize: 12
+      color: "#94a3b8"
+  - id: text13
+    type: text
+    x: 930
+    y: 330
+    w: 120
+    h: 22
+    props:
+      text: Supply air ▸
+      fontSize: 12
+      color: "#94a3b8"
+  - id: valve14
+    type: valve
+    x: 80
+    y: 225
+    w: 70
+    h: 70
+    props: {}
+    bindings:
+      open:
+        tag: Sites/AHU1/OADamper
+        expr: value > 20
+    tooltip: Outside-air damper
+  - id: progress15
+    type: progress
+    x: 76
+    y: 300
+    w: 80
+    h: 14
+    props:
+      tag: Sites/AHU1/OADamper
+      color: "#38bdf8"
+  - id: rect16
+    type: rect
+    x: 190
+    y: 210
+    w: 50
+    h: 100
+    props:
+      fill: "#475569"
+      stroke: "#94a3b8"
+      radius: 2
+    tooltip: Bag filter
+    bindings:
+      fill:
+        tag: Sites/AHU1/FilterDP
+        map:
+          - when: ">=250"
+            value: "#b45309"
+          - when: default
+            value: "#475569"
+  - id: text17
+    type: text
+    x: 180
+    y: 176
+    w: 80
+    h: 22
+    props:
+      text: Filter
+      fontSize: 12
+      color: "#94a3b8"
+      align: center
+  - id: heatExchanger18
+    type: heatExchanger
+    x: 280
+    y: 225
+    w: 150
+    h: 70
+    props:
+      hotColor: "#ef4444"
+      coldColor: "#f97316"
+    bindings:
+      active:
+        tag: Sites/AHU1/HeatingValve
+        expr: value > 0
+    tooltip: Heating coil
+  - id: heatExchanger19
+    type: heatExchanger
+    x: 460
+    y: 225
+    w: 150
+    h: 70
+    props:
+      hotColor: "#3b82f6"
+      coldColor: "#22d3ee"
+    bindings:
+      active:
+        tag: Sites/AHU1/CoolingValve
+        expr: value > 0
+    tooltip: Cooling coil
+  - id: bar20
+    type: bar
+    x: 290
+    y: 330
+    w: 130
+    h: 22
+    props:
+      tag: Sites/AHU1/HeatingValve
+      orientation: horizontal
+      color: "#ef4444"
+      min: 0
+      max: 100
+  - id: bar21
+    type: bar
+    x: 470
+    y: 330
+    w: 130
+    h: 22
+    props:
+      tag: Sites/AHU1/CoolingValve
+      orientation: horizontal
+      color: "#3b82f6"
+      min: 0
+      max: 100
+  - id: fan22
+    type: fan
+    x: 690
+    y: 215
+    w: 90
+    h: 90
+    props: {}
+    bindings:
+      running:
+        tag: Sites/AHU1/SupplyFan
+    faceplate:
+      path: Sites/AHU1/SupplyFan
+    tooltip: Supply fan
+  - id: instrument23
+    type: instrument
+    x: 100
+    y: 120
+    w: 56
+    h: 56
+    props:
+      function: TT
+      loop: OA
+      unit: °C
+    bindings:
+      value:
+        tag: Sites/AHU1/OutsideTemp
+  - id: instrument24
+    type: instrument
+    x: 250
+    y: 120
+    w: 56
+    h: 56
+    props:
+      function: TT
+      loop: MA
+      unit: °C
+    bindings:
+      value:
+        tag: Sites/AHU1/MixedTemp
+  - id: instrument25
+    type: instrument
+    x: 830
+    y: 120
+    w: 56
+    h: 56
+    props:
+      function: TIC
+      loop: SA
+      unit: °C
+      mounting: panel
+    bindings:
+      value:
+        tag: Sites/AHU1/SupplyTemp
+  - id: instrument26
+    type: instrument
+    x: 205
+    y: 380
+    w: 56
+    h: 56
+    props:
+      function: PDT
+      loop: F1
+      unit: Pa
+      decimals: 0
+    bindings:
+      value:
+        tag: Sites/AHU1/FilterDP
+  - id: rect27
+    type: rect
+    x: 60
+    y: 470
+    w: 980
+    h: 80
+    props:
+      fill: "#1e293b"
+      stroke: "#334155"
+      radius: 4
+    locked: true
+  - id: text28
+    type: text
+    x: 930
+    y: 556
+    w: 140
+    h: 22
+    props:
+      text: ◂ Return air
+      fontSize: 12
+      color: "#94a3b8"
+  - id: fan29
+    type: fan
+    x: 690
+    y: 470
+    w: 80
+    h: 80
+    props: {}
+    bindings:
+      running:
+        tag: Sites/AHU1/ReturnFan
+    tooltip: Return fan
+  - id: instrument30
+    type: instrument
+    x: 830
+    y: 482
+    w: 56
+    h: 56
+    props:
+      function: TT
+      loop: RA
+      unit: °C
+    bindings:
+      value:
+        tag: Sites/AHU1/ReturnTemp
+  - id: instrument31
+    type: instrument
+    x: 940
+    y: 482
+    w: 56
+    h: 56
+    props:
+      function: AT
+      loop: CO2
+      unit: ppm
+      decimals: 0
+    bindings:
+      value:
+        tag: Sites/AHU1/CO2
+  - id: beacon32
+    type: beacon
+    x: 340
+    y: 470
+    w: 60
+    h: 60
+    props:
+      color: "#38bdf8"
+    bindings:
+      active:
+        tag: Sites/AHU1/FrostAlarm
+    tooltip: Frost protection
+  - id: thermostat33
+    type: thermostat
+    x: 1110
+    y: 90
+    w: 150
+    h: 150
+    props:
+      min: 10
+      max: 32
+    bindings:
+      value:
+        tag: Sites/AHU1/SupplyTemp
+      setpoint:
+        tag: Sites/AHU1/SupplySetpoint
+      heating:
+        tag: Sites/AHU1/HeatingValve
+        expr: value > 0
+  - id: gauge34
+    type: gauge
+    x: 1270
+    y: 90
+    w: 150
+    h: 136
+    props:
+      tag: Sites/AHU1/CO2
+      min: 400
+      max: 1500
+      label: CO₂
+      decimals: 0
+      zones: 400:#22c55e,900:#f59e0b,1100:#ef4444
+  - id: gauge35
+    type: gauge
+    x: 1424
+    y: 90
+    w: 150
+    h: 136
+    props:
+      tag: Sites/AHU1/FilterDP
+      min: 0
+      max: 300
+      label: Filter ΔP
+      decimals: 0
+      zones: 0:#22c55e,200:#f59e0b,250:#ef4444
+  - id: value36
+    type: value
+    x: 1110
+    y: 250
+    w: 220
+    h: 34
+    props:
+      tag: Sites/AHU1/OutsideTemp
+      label: Outside
+      fontSize: 15
+      align: left
+  - id: value37
+    type: value
+    x: 1342
+    y: 250
+    w: 230
+    h: 34
+    props:
+      tag: Sites/AHU1/ReturnTemp
+      label: Return
+      fontSize: 15
+      align: left
+  - id: trend38
+    type: trend
+    x: 1104
+    y: 356
+    w: 468
+    h: 258
+    props:
+      tags: Sites/AHU1/SupplyTemp,Sites/AHU1/SupplySetpoint,Sites/AHU1/OutsideTemp,Sites/AHU1/CO2
+      minutes: 15
+      legend: false
+  - id: alarmTable39
+    type: alarmTable
+    x: 16
+    y: 638
+    w: 1064
+    h: 248
+    props:
+      area: Sites/AHU1
+      maxRows: 8
+  - id: switch40
+    type: switch
+    x: 1106
+    y: 674
+    w: 160
+    h: 32
+    props:
+      tag: Sites/AHU1/SupplyFan
+      label: Supply fan
+  - id: switch41
+    type: switch
+    x: 1276
+    y: 674
+    w: 160
+    h: 32
+    props:
+      tag: Sites/AHU1/ReturnFan
+      label: Return fan
+  - id: numeric42
+    type: numeric
+    x: 1106
+    y: 718
+    w: 200
+    h: 34
+    props:
+      tag: Sites/AHU1/SupplySetpoint
+      label: SA setpoint
+      unit: °C
+      step: 0.5
+  - id: slider43
+    type: slider
+    x: 1316
+    y: 718
+    w: 256
+    h: 34
+    props:
+      tag: Sites/AHU1/FanSpeed
+  - id: value44
+    type: value
+    x: 1106
+    y: 764
+    w: 220
+    h: 34
+    props:
+      tag: Sites/AHU1/HeatingValve
+      label: Heating
+      fontSize: 15
+      align: left
+  - id: value45
+    type: value
+    x: 1342
+    y: 764
+    w: 230
+    h: 34
+    props:
+      tag: Sites/AHU1/CoolingValve
+      label: Cooling
+      fontSize: 15
+      align: left
+  - id: value46
+    type: value
+    x: 1106
+    y: 806
+    w: 220
+    h: 34
+    props:
+      tag: Sites/AHU1/OADamper
+      label: OA damper
+      fontSize: 15
+      align: left
+  - id: value47
+    type: value
+    x: 1342
+    y: 806
+    w: 230
+    h: 34
+    props:
+      tag: Sites/AHU1/MixedTemp
+      label: Mixed air
+      fontSize: 15
+      align: left
+name: Sites/AHU1

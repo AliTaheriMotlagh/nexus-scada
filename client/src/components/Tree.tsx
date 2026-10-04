@@ -128,7 +128,7 @@ export function Tree(props: TreeProps) {
             }}
             onClick={() => {
               props.onSelect?.(item);
-              if (item.children && !props.onSelect) toggle(item.id);
+              if (item.children) toggle(item.id); // folders open with a single tap (touch friendly)
             }}
             onDoubleClick={() => (item.children ? toggle(item.id) : props.onActivate?.(item))}
             onContextMenu={props.onContextMenu ? (e) => { e.preventDefault(); props.onContextMenu!(item, e); } : undefined}

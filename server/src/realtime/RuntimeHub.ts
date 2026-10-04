@@ -1,6 +1,8 @@
 import type { AlarmInfo, DeviceStatus, Role, TagChange } from '../../../shared/types.ts';
 import { pathMatches } from '../../../shared/scriptCompiler.ts';
 import type { Runtime } from '../Runtime.ts';
+import type { DesignOp } from '../../../shared/designOps.ts';
+import { DesignCollab } from './DesignCollab.ts';
 import { HubException, type HubClients, type HubConnection, type HubDefinition } from './SignalRServer.ts';
 
 const SUBS = 'subs';
@@ -26,7 +28,12 @@ export function createRuntimeHub(rt: Runtime, clients: () => HubClients): HubDef
     }
   };
 
+  const collab = new DesignCollab(rt, clients);
+
   return {
+    onDisconnected(conn) {
+      collab.leaveAll(conn);
+    },
     onConnected(conn) {
       conn.items.set(SUBS, new Set<string>());
       conn.items.set(PATTERNS, new Set<string>());
@@ -88,6 +95,31 @@ export function createRuntimeHub(rt: Runtime, clients: () => HubClients): HubDef
         else clients().removeFromGroup(conn.id, 'scriptlog');
       },
       whoAmI: (conn) => rt.auth.effective(conn.user) ?? null,
+
+      // ── collaborative design ──
+      designJoin(conn, name: string) {
+        requireRole(conn, 'engineer');
+        return collab.join(conn, String(name));
+      },
+      designLeave(conn, name: string) {
+        collab.leave(conn, String(name));
+      },
+      designOps(conn, name: string, ops: DesignOp[]) {
+        requireRole(conn, 'engineer');
+        return collab.ops(conn, String(name), ops);
+      },
+      designPresence(conn, name: string, cursor: { x: number; y: number } | null, selection: string[]) {
+        collab.presence(conn, String(name), cursor, selection);
+      },
+      designSave(conn, name: string) {
+        const user = requireRole(conn, 'engineer');
+        collab.save(conn, String(name), user.username);
+      },
+      designRevert(conn, name: string) {
+        requireRole(conn, 'engineer');
+        return collab.revert(String(name));
+      },
+      designSessions: () => collab.summary(),
     },
   };
 }

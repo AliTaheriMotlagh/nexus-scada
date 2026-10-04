@@ -8,6 +8,8 @@ import { AppError, badRequest } from '../core/errors.ts';
 import { logBuffer } from '../core/logger.ts';
 import type { Runtime } from '../Runtime.ts';
 import { checkScript } from '../scripting/ScriptEngine.ts';
+import { installTemplate, TEMPLATES } from '../../../shared/templates/index.ts';
+import type { GenerateRequest } from '../ai/AiService.ts';
 
 declare module 'express-serve-static-core' {
   interface Locals {
@@ -230,6 +232,48 @@ export function createApi(rt: Runtime): Router {
   api.put('/map', need('engineer'), notInDemo, async (req, res) => {
     await rt.updateSection('map', req.body as MapConfig, who(res));
     res.json({ ok: true });
+  });
+
+  // ── page templates & use cases ──
+  api.get('/templates', need('viewer'), (_req, res) => {
+    res.json(TEMPLATES.map((t) => ({
+      id: t.id, name: t.name, category: t.category, description: t.description, features: t.features ?? [],
+      size: t.size, defaultName: t.defaultName, hasTags: !!t.nodes, scripts: t.scripts?.('X', 'X').length ?? 0,
+    })));
+  });
+  api.post('/templates/install', need('engineer'), notInDemo, async (req, res) => {
+    const tpl = TEMPLATES.find((t) => t.id === req.body?.id);
+    if (!tpl) throw badRequest('Unknown template');
+    const parent = String(req.body?.parent ?? 'Sites').replace(/^\/+|\/+$/g, '');
+    const name = String(req.body?.name ?? tpl.defaultName);
+    let inst;
+    try {
+      inst = installTemplate(tpl, rt.config.nodes, parent, name, req.body?.title);
+    } catch (err) {
+      throw badRequest((err as Error).message);
+    }
+    if (rt.store.displays.exists(inst.display.name)) throw badRequest(`Display "${inst.display.name}" already exists`);
+    for (const s of inst.scripts) {
+      if ((rt.config.scripts ?? []).some((x) => x.name === s.name)) throw badRequest(`Script "${s.name}" already exists`);
+      rt.store.writeScript(s.file, s.code);
+    }
+    if (tpl.nodes || inst.scripts.length) {
+      await rt.appendToProject(parent, tpl.nodes?.(name), inst.scripts.map(({ code: _c, ...cfg }) => cfg), who(res), `template.install.${tpl.id}`);
+    }
+    rt.store.displays.save(inst.display.name, inst.display);
+    rt.auth.audit(who(res), 'display.create', inst.display.name, { template: tpl.id });
+    rt.bus.emit('project:reloaded', { revision: rt.store.revision });
+    res.json({ display: inst.display.name, base: inst.base, scripts: inst.scripts.map((s) => s.name) });
+  });
+
+  // ── AI page assistant ──
+  api.get('/ai/status', need('viewer'), (_req, res) => { res.json(rt.ai.status()); });
+  api.post('/ai/generate', need('engineer'), async (req, res) => {
+    const body = req.body as GenerateRequest;
+    if (!Array.isArray(body?.catalog) || !Array.isArray(body?.tags)) throw badRequest('catalog and tags are required');
+    const doc = await rt.ai.generate({ ...body, width: Number(body.width) || 1600, height: Number(body.height) || 900 }, who(res));
+    rt.auth.audit(who(res), 'ai.generate', undefined, body.prompt?.slice(0, 200));
+    res.json(doc);
   });
 
   // ── audit ──

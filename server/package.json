@@ -8,7 +8,8 @@
     "start": "node --disable-warning=ExperimentalWarning src/index.ts",
     "typecheck": "tsc --noEmit -p .",
     "test": "node --disable-warning=ExperimentalWarning --test test/*.test.ts",
-    "hash-password": "node --disable-warning=ExperimentalWarning src/tools/hash-password.ts"
+    "hash-password": "node --disable-warning=ExperimentalWarning src/tools/hash-password.ts",
+    "install-templates": "node --disable-warning=ExperimentalWarning src/tools/install-templates.ts"
   },
   "dependencies": {
     "express": "^5.2.1",

@@ -1,5 +1,8 @@
 import { join } from 'node:path';
-import type { ProjectConfig, ProjectInfo } from '../../shared/types.ts';
+import YAML from 'yaml';
+import { appendNode, appendScripts } from './config/yamlEdit.ts';
+import type { ProjectConfig, ProjectInfo, ProjectNode, ScriptConfig } from '../../shared/types.ts';
+import { AiService } from './ai/AiService.ts';
 import { AlarmEngine } from './alarms/AlarmEngine.ts';
 import { Notifier } from './alarms/Notifier.ts';
 import { RecipeService } from './automation/RecipeService.ts';
@@ -38,6 +41,7 @@ export class Runtime {
   readonly recipes: RecipeService;
   readonly scripts: ScriptEngine;
   readonly auth: AuthService;
+  readonly ai = new AiService();
   readonly startedAt = Date.now();
   /** NEXUS_DEMO=true → public demo: operating is allowed, saving code/config/graphics is not. */
   readonly demo = process.env.NEXUS_DEMO === 'true' || process.env.NEXUS_DEMO === '1';
@@ -86,6 +90,29 @@ export class Runtime {
     return this.serialize(async () => {
       const config = this.store.updateSection(key, value, user);
       this.auth.audit(user, `project.update.${String(key)}`);
+      await this.apply(config);
+    });
+  }
+
+  /** Replace several top-level sections in one save + reload (e.g. nodes and scripts of a template). */
+  updateSections(patch: Partial<ProjectConfig>, user: string, action: string): Promise<void> {
+    return this.serialize(async () => {
+      const doc = YAML.parseDocument(this.store.readYaml());
+      for (const [k, v] of Object.entries(patch)) doc.set(k, doc.createNode(v));
+      const config = this.store.saveYaml(doc.toString({ lineWidth: 0 }), user);
+      this.auth.audit(user, action);
+      await this.apply(config);
+    });
+  }
+
+  /** Add a node subtree (+ script configs) to project.yaml, keeping the existing file's formatting. */
+  appendToProject(parentPath: string, node: ProjectNode | undefined, scripts: ScriptConfig[], user: string, action: string): Promise<void> {
+    return this.serialize(async () => {
+      const doc = YAML.parseDocument(this.store.readYaml());
+      if (node) appendNode(doc, parentPath, node);
+      appendScripts(doc, scripts);
+      const config = this.store.saveYaml(doc.toString({ lineWidth: 0 }), user);
+      this.auth.audit(user, action);
       await this.apply(config);
     });
   }

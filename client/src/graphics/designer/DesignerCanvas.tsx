@@ -6,7 +6,9 @@ import { bindingTagRefs } from '../../scripting/bindings.ts';
 import { useProject } from '../../stores/project.ts';
 import { ElementView } from '../ElementView.tsx';
 import { defaultProps, getMeta } from '../registry.ts';
+import { lockedBy, setCursor, useCollab } from './collab.ts';
 import { useDesigner } from './designerStore.ts';
+import { toast } from '../../stores/ui.ts';
 
 export const DND_ELEMENT = 'application/x-nexus-element';
 export const DND_TAG = 'application/x-nexus-tag';
@@ -35,6 +37,7 @@ export function DesignerCanvas() {
   const snap = useDesigner((s) => s.snap);
   const showGrid = useDesigner((s) => s.showGrid);
   const preview = useDesigner((s) => s.preview);
+  const tool = useDesigner((s) => s.tool);
   const st = useDesigner.getState;
   const canvas = useRef<HTMLDivElement>(null);
   const gesture = useRef<Gesture | null>(null);
@@ -64,6 +67,12 @@ export function DesignerCanvas() {
   const onElementDown = useCallback((e: ReactPointerEvent, el: ElementDoc) => {
     if (e.button !== 0) return;
     e.stopPropagation();
+    if (placeTool(e)) return;
+    const owner = lockedBy(el.id);
+    if (owner) {
+      toast(`${owner.user} is editing this element`, 'warning');
+      return;
+    }
     if (!st().selection.includes(el.id)) st().select([el.id], e.shiftKey);
     else if (e.shiftKey) { st().select([el.id], true); return; }
     begin('move', e);
@@ -72,14 +81,16 @@ export function DesignerCanvas() {
 
   const onCanvasDown = (e: ReactPointerEvent) => {
     if (e.button !== 0 || e.target !== e.currentTarget) return;
+    if (placeTool(e)) return;
     if (!e.shiftKey) st().select([]);
     begin('marquee', e);
   };
 
   const onMove = (e: ReactPointerEvent) => {
+    const p = toCanvas(e);
+    setCursor({ x: Math.round(p.x), y: Math.round(p.y) });
     const g = gesture.current;
     if (!g) return;
-    const p = toCanvas(e);
     const dx = p.x - g.sx, dy = p.y - g.sy;
     if (g.kind === 'marquee') {
       setMarquee({ x: Math.min(p.x, g.sx), y: Math.min(p.y, g.sy), w: Math.abs(dx), h: Math.abs(dy) });
@@ -118,7 +129,7 @@ export function DesignerCanvas() {
     if (!g) return;
     if (g.kind === 'marquee') {
       if (marquee && (marquee.w > 3 || marquee.h > 3)) {
-        const hit = st().doc!.elements.filter((el) => el.x < marquee.x + marquee.w && el.x + el.w > marquee.x && el.y < marquee.y + marquee.h && el.y + el.h > marquee.y);
+        const hit = st().doc!.elements.filter((el) => !lockedBy(el.id) && el.x < marquee.x + marquee.w && el.x + el.w > marquee.x && el.y < marquee.y + marquee.h && el.y + el.h > marquee.y);
         st().select(hit.map((h) => h.id), true);
       }
       setMarquee(null);
@@ -134,24 +145,22 @@ export function DesignerCanvas() {
     }
   };
 
-  const onDrop = (e: DragEvent) => {
-    e.preventDefault();
-    const p = toCanvas(e);
-    const type = e.dataTransfer.getData(DND_ELEMENT);
-    if (type) {
-      const el = createElement(type, snapV(p.x), snapV(p.y));
+  /** Place an element type or a tag at a canvas point (shared by drag & drop and tap-to-place). */
+  const placeAt = (kind: 'element' | 'tag', id: string, p: { x: number; y: number }) => {
+    if (kind === 'element') {
+      const el = createElement(id, snapV(p.x), snapV(p.y));
       if (el) st().addElement(el);
       return;
     }
-    const tag = e.dataTransfer.getData(DND_TAG);
-    if (!tag) return;
-    // Dropped on an element → bind its primary property; on empty canvas → create a matching widget.
-    const target = [...st().doc!.elements].reverse().find((el) => p.x >= el.x && p.x <= el.x + el.w && p.y >= el.y && p.y <= el.y + el.h);
+    const tag = id;
+    // On an element → bind its primary property; on empty canvas → create a matching widget.
+    const target = [...st().doc!.elements].reverse().find((el) => p.x >= el.x && p.x <= el.x + el.w && p.y >= el.y && p.y <= el.y + el.h && !lockedBy(el.id));
     const meta = target && getMeta(target.type);
     if (target && meta) {
       if (meta.props.some((pd) => pd.name === 'tag' && pd.type === 'tag')) st().updateProps(target.id, { tag });
       else if (meta.primary) st().setBinding(target.id, meta.primary, { tag });
       st().select([target.id]);
+      toast(`Bound ${tag} to ${target.name ?? target.id}`, 'success');
       return;
     }
     const info = useProject.getState().tags.get(tag);
@@ -164,12 +173,37 @@ export function DesignerCanvas() {
     if (el) st().addElement(el);
   };
 
+  const onDrop = (e: DragEvent) => {
+    e.preventDefault();
+    const p = toCanvas(e);
+    const type = e.dataTransfer.getData(DND_ELEMENT);
+    if (type) return placeAt('element', type, p);
+    const tag = e.dataTransfer.getData(DND_TAG);
+    if (tag) placeAt('tag', tag, p);
+  };
+
+  /** Tap-to-place: an armed tool is placed where the canvas is tapped. */
+  const placeTool = (e: ReactPointerEvent): boolean => {
+    const tool = st().tool;
+    if (!tool) return false;
+    placeAt(tool.kind, tool.id, toCanvas(e));
+    if (!e.shiftKey) st().setTool(null); // Shift keeps the tool for placing several
+    return true;
+  };
+
+  const peers = [...useCollab((c) => c.peers).values()];
   const single = selection.length === 1 ? doc.elements.find((e) => e.id === selection[0]) : undefined;
   const handles: Handle[] = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
   const hs = 8 / zoom;
 
   return (
-    <div className="designer-viewport">
+    <div className={`designer-viewport ${tool ? 'placing' : ''}`}>
+      {tool && (
+        <div className="place-banner">
+          Tap the canvas to place <b>{tool.label}</b>{tool.kind === 'tag' ? ' (tap an element to bind it)' : ''}
+          <button className="small" onClick={() => st().setTool(null)}>Cancel</button>
+        </div>
+      )}
       <div className="designer-scaler" style={{ width: doc.width * zoom + 80, height: doc.height * zoom + 80 }}>
         <div
           ref={canvas}
@@ -182,6 +216,7 @@ export function DesignerCanvas() {
           onPointerDown={preview ? undefined : onCanvasDown}
           onPointerMove={onMove}
           onPointerUp={onUp}
+          onPointerLeave={() => setCursor(null)}
           onDragOver={onDragOver}
           onDrop={onDrop}
         >
@@ -202,6 +237,17 @@ export function DesignerCanvas() {
                 onPointerDown={(e) => { e.stopPropagation(); begin('rotate', e); }} title="Rotate (Alt = free)" />
             </div>
           )}
+ {peers.flatMap((p) => doc.elements.filter((el) => p.selection.includes(el.id)).map((el) => (
+            <div key={`${p.connId}:${el.id}`} className="peer-sel" style={{ left: el.x, top: el.y, width: el.w, height: el.h, borderColor: p.color, borderWidth: 2 / zoom, transform: el.rotation ? `rotate(${el.rotation}deg)` : undefined }}>
+              <span style={{ background: p.color, fontSize: 11 / zoom, padding: `${1 / zoom}px ${5 / zoom}px` }}>🔒 {p.user}</span>
+            </div>
+          )))}
+          {peers.filter((p) => p.cursor).map((p) => (
+            <div key={p.connId} className="peer-cursor" style={{ left: p.cursor!.x, top: p.cursor!.y, transform: `scale(${1 / zoom})` }}>
+              <svg width="18" height="18" viewBox="0 0 18 18"><path d="M1 1 L1 15 L5 11 L8 17 L10.5 16 L7.6 10 L13 10 Z" fill={p.color} stroke="#0b1118" strokeWidth="1.2" /></svg>
+              <span style={{ background: p.color }}>{p.user}</span>
+            </div>
+          ))}
           {marquee && <div className="marquee" style={{ left: marquee.x, top: marquee.y, width: marquee.w, height: marquee.h }} />}
         </div>
       </div>

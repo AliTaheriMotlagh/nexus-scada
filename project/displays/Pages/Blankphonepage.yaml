@@ -1,0 +1,19 @@
+title: Blankphonepage
+kind: page
+width: 420
+height: 900
+background: "#0f1722"
+grid: 10
+elements:
+  - id: text1
+    type: text
+    x: 24
+    y: 12
+    w: 372
+    h: 34
+    props:
+      text: Blankphonepage
+      fontSize: 19
+      color: "#e2e8f0"
+      fontWeight: "700"
+name: Pages/Blankphonepage

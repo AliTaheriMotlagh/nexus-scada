@@ -3,13 +3,16 @@ import {
   AlignCenterHorizontal, AlignCenterVertical, AlignEndHorizontal, AlignEndVertical, AlignHorizontalDistributeCenter,
   AlignStartHorizontal, AlignStartVertical, AlignVerticalDistributeCenter, ArrowDownToLine, ArrowUpToLine, Box, ClipboardPaste,
   Copy, Download, Eye, EyeOff, FilePlus2, Grid3x3, Group, Lock, Magnet, Monitor, Pencil, Play, Redo2, Save, Scissors,
-  Search, Shapes, Trash2, Undo2, Ungroup, Upload, ZoomIn, ZoomOut,
+  LayoutTemplate, RotateCcw, Search, Shapes, Sparkles, Trash2, Undo2, Ungroup, Upload, ZoomIn, ZoomOut,
 } from 'lucide-react';
 import type { DisplayDoc, TreeItem } from '@shared/types.ts';
 import { Empty, Tabs } from '../components/Overlays.tsx';
 import { Sidebar } from '../components/Sidebar.tsx';
 import { Tree } from '../components/Tree.tsx';
 import { createElement, DesignerCanvas, DND_ELEMENT, DND_TAG } from '../graphics/designer/DesignerCanvas.tsx';
+import { AiAssistant } from '../graphics/designer/AiAssistant.tsx';
+import { revertDesign, saveDesign, startDesignSession, useCollab } from '../graphics/designer/collab.ts';
+import { TemplateGallery } from '../graphics/designer/TemplateGallery.tsx';
 import { useDesigner } from '../graphics/designer/designerStore.ts';
 import { PropertyPanel } from '../graphics/designer/PropertyPanel.tsx';
 import { allMetas, CATEGORIES } from '../graphics/registry.ts';
@@ -23,6 +26,7 @@ const NEW_DISPLAY = (name: string): DisplayDoc => ({ name, title: name.split('/'
 
 function Palette() {
   const [filter, setFilter] = useState('');
+  const tool = useDesigner((s) => s.tool);
   const items = useMemo<TreeItem[]>(() => CATEGORIES.map((c) => ({
     id: `cat:${c}`, name: c, kind: 'folder',
     children: allMetas().filter((m) => m.category === c).map((m) => ({ id: m.type, name: m.label, kind: 'element', meta: { category: c } })),
@@ -31,6 +35,8 @@ function Palette() {
     <>
       <div className="search"><Search size={14} /><input placeholder="Search symbols…" value={filter} onChange={(e) => setFilter(e.target.value)} /></div>
       <Tree items={items} filter={filter} defaultDepth={1} dragType={DND_ELEMENT}
+        selected={tool?.kind === 'element' ? tool.id : null}
+        onSelect={(it) => { if (!it.children) useDesigner.getState().setTool(tool?.id === it.id ? null : { kind: 'element', id: it.id, label: it.name }); }}
         renderIcon={(it) => (it.children ? undefined : <Shapes size={14} className="ic-display" />)}
         onActivate={(it) => {
           if (it.children) return;
@@ -39,8 +45,20 @@ function Palette() {
           const el = createElement(it.id, d.width / 2, d.height / 2);
           if (el) useDesigner.getState().addElement(el);
         }} />
-      <div className="hint">Drag onto the canvas (double-click to add at centre).</div>
+      <div className="hint">Tap a symbol, then tap the canvas to place it (or drag it onto the canvas).</div>
     </>
+  );
+}
+
+/** Avatars of the other people editing this display. */
+function Peers() {
+  const peers = [...useCollab((s) => s.peers).values()];
+  const me = useCollab((s) => s.me);
+  if (!me) return null;
+  return (
+    <div className="peers" title={`Editing now: ${[me.user + ' (you)', ...peers.map((p) => p.user)].join(', ')}`}>
+      {[me, ...peers].map((p) => <span key={p.connId} className="peer-avatar" style={{ background: p.color }}>{p.user[0].toUpperCase()}</span>)}
+    </div>
   );
 }
 
@@ -65,35 +83,32 @@ function Layers() {
   );
 }
 
-function DisplaysTree({ current, onOpen }: { current: string | null; onOpen: (name: string) => void }) {
+function DisplaysTree({ current, onOpen, onNew }: { current: string | null; onOpen: (name: string) => void; onNew: () => void }) {
   const tree = useProject((s) => s.displays.tree);
+  const sessions = useCollab((s) => s.sessions);
   const [filter, setFilter] = useState('');
-  const create = async () => {
-    const name = await useUi.getState().prompt('New display name (use / for folders):', 'Plant/NewDisplay');
-    if (!name) return;
-    try {
-      await api.put(`/displays/${enc(name)}`, NEW_DISPLAY(name));
-      await useProject.getState().refresh();
-      onOpen(name);
-    } catch (err) { errorToast(err); }
-  };
+  const create = () => onNew();
   return (
     <>
       <div className="search"><Search size={14} /><input placeholder="Filter…" value={filter} onChange={(e) => setFilter(e.target.value)} />
-        <button className="icon-btn" title="New display" onClick={() => void create()}><FilePlus2 size={15} /></button></div>
-      <Tree items={tree} filter={filter} selected={current} defaultDepth={3} onSelect={(it) => { if (!it.children) onOpen(it.id); }} />
+        <button className="icon-btn" title="New page from template" onClick={create}><FilePlus2 size={15} /></button></div>
+      <Tree items={tree} filter={filter} selected={current} defaultDepth={3} onSelect={(it) => { if (!it.children) onOpen(it.id); }}
+        renderExtra={(it) => (sessions[it.id] ?? []).map((p, i) => <span key={i} className="peer-dot" style={{ background: p.color }} title={`${p.user} is editing`}>{p.user[0].toUpperCase()}</span>)} />
     </>
   );
 }
 
 function TagsTab() {
   const tree = useProject((s) => s.tree);
+  const tool = useDesigner((s) => s.tool);
   const [filter, setFilter] = useState('');
   return (
     <>
       <div className="search"><Search size={14} /><input placeholder="Filter tags…" value={filter} onChange={(e) => setFilter(e.target.value)} /></div>
-      <Tree items={tree} filter={filter} defaultDepth={2} dragType={DND_TAG} draggable={(it) => it.kind === 'tag'} />
-      <div className="hint">Drag a tag onto the canvas to create a control, or onto an element to animate it.</div>
+      <Tree items={tree} filter={filter} defaultDepth={2} dragType={DND_TAG} draggable={(it) => it.kind === 'tag'}
+        selected={tool?.kind === 'tag' ? tool.id : null}
+        onSelect={(it) => { if (it.kind === 'tag') useDesigner.getState().setTool(tool?.id === it.id ? null : { kind: 'tag', id: it.id, label: it.id }); }} />
+      <div className="hint">Tap a tag, then tap the canvas to create a control — or tap an element to animate it with the tag. Drag & drop works too.</div>
     </>
   );
 }
@@ -103,37 +118,26 @@ export function DesignPage() {
   const s = useDesigner();
   const [tab, setTab] = useState<'displays' | 'palette' | 'tags' | 'layers'>('palette');
   const [loading, setLoading] = useState(false);
+  const [gallery, setGallery] = useState(false);
+  const [assistant, setAssistant] = useState(false);
 
-  const open = async (name: string) => {
-    if (useDesigner.getState().dirty && !(await useUi.getState().confirm('Discard unsaved changes?'))) return;
-    navigate('design', name);
-  };
+  const open = (name: string) => navigate('design', name);
 
+  // Join the shared (multi-user) editing session of the display in the URL.
   useEffect(() => {
     const name = route.param;
-    if (!name || name === useDesigner.getState().name) return;
+    if (!name) return;
     setLoading(true);
-    api.get<DisplayDoc>(`/displays/${enc(name)}`)
-      .then((d) => {
-        useDesigner.getState().load(name, d);
-        // open "zoomed to fit" so the whole page is visible on tablets and small laptops
-        const vp = document.querySelector('.content-body');
-        const avail = (vp?.clientWidth ?? window.innerWidth) - 90;
-        useDesigner.getState().setZoom(Math.min(1, Math.max(0.2, avail / d.width)));
-      })
-      .catch(errorToast)
-      .finally(() => setLoading(false));
+    return startDesignSession(name, (d) => {
+      setLoading(false);
+      // open "zoomed to fit" so the whole page is visible on tablets and small laptops
+      const vp = document.querySelector('.content-body');
+      const avail = (vp?.clientWidth ?? window.innerWidth) - 90;
+      useDesigner.getState().setZoom(Math.min(1, Math.max(0.2, avail / d.width)));
+    });
   }, [route.param]);
 
-  const save = async () => {
-    const { name, doc } = useDesigner.getState();
-    if (!name || !doc) return;
-    try {
-      await api.put(`/displays/${enc(name)}`, doc);
-      useDesigner.getState().markSaved();
-      toast(`Saved ${name}`, 'success');
-    } catch (err) { errorToast(err); }
-  };
+  const save = () => saveDesign();
 
   const remove = async () => {
     const { name } = useDesigner.getState();
@@ -188,7 +192,7 @@ export function DesignPage() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement;
-      if (t.closest('input, textarea, select, .monaco-host, [contenteditable]')) return;
+      if (t instanceof Element && t.closest('input, textarea, select, .monaco-host, [contenteditable]')) return;
       const st = useDesigner.getState();
       const mod = e.ctrlKey || e.metaKey;
       const k = e.key.toLowerCase();
@@ -202,20 +206,15 @@ export function DesignPage() {
       else if (mod && k === 'a') { e.preventDefault(); st.select(st.doc?.elements.map((x) => x.id) ?? []); }
       else if (mod && k === 'g') { e.preventDefault(); if (e.shiftKey) st.ungroup(); else st.group(); }
       else if (k === 'delete' || k === 'backspace') st.removeSelected();
-      else if (k === 'escape') st.select([]);
+      else if (k === 'escape') { st.setTool(null); st.select([]); }
       else if (k.startsWith('arrow')) {
         e.preventDefault();
         const step = e.shiftKey ? (st.doc?.grid ?? 10) : 1;
         st.nudge(k === 'arrowleft' ? -step : k === 'arrowright' ? step : 0, k === 'arrowup' ? -step : k === 'arrowdown' ? step : 0);
       }
     };
-    const beforeUnload = (e: BeforeUnloadEvent) => { if (useDesigner.getState().dirty) e.preventDefault(); };
     window.addEventListener('keydown', onKey);
-    window.addEventListener('beforeunload', beforeUnload);
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      window.removeEventListener('beforeunload', beforeUnload);
-    };
+    return () => window.removeEventListener('keydown', onKey);
   }, []);
 
   const T = ({ icon, title, onClick, active, disabled }: { icon: React.ReactNode; title: string; onClick: () => void; active?: boolean; disabled?: boolean }) => (
@@ -231,13 +230,16 @@ export function DesignPage() {
         ]} />
         <div className="sidebar-scroll">
           {tab === 'palette' && <Palette />}
-          {tab === 'displays' && <DisplaysTree current={s.name} onOpen={(n) => void open(n)} />}
+          {tab === 'displays' && <DisplaysTree current={s.name} onOpen={open} onNew={() => setGallery(true)} />}
           {tab === 'tags' && <TagsTab />}
           {tab === 'layers' && <Layers />}
         </div>
       </Sidebar>
       <main className="content">
         <div className="toolbar designer-toolbar">
+ <T icon={<LayoutTemplate size={16} />} title="New page from template / use case" onClick={() => setGallery(true)} />
+          <T icon={<Sparkles size={16} />} title="AI page assistant" onClick={() => setAssistant(true)} disabled={!s.doc} />
+          <span className="sep" />
           <T icon={<Save size={16} />} title="Save (Ctrl+S)" onClick={() => void save()} active={s.dirty} disabled={!s.doc} />
           <T icon={<Undo2 size={16} />} title="Undo (Ctrl+Z)" onClick={s.undo} disabled={!s.past.length} />
           <T icon={<Redo2 size={16} />} title="Redo (Ctrl+Y)" onClick={s.redo} disabled={!s.future.length} />
@@ -271,6 +273,8 @@ export function DesignPage() {
           <T icon={<Magnet size={16} />} title="Snap to grid" onClick={() => s.toggle('snap')} active={s.snap} />
           <T icon={<Play size={16} />} title="Live preview (bindings on)" onClick={() => s.toggle('preview')} active={s.preview} />
           <span className="spacer" />
+          <Peers />
+          <T icon={<RotateCcw size={16} />} title="Discard unsaved changes (for everyone)" onClick={() => void useUi.getState().confirm('Discard all unsaved changes of this display for every editor?').then((ok) => { if (ok) void revertDesign(); })} disabled={!s.dirty} />
           <T icon={<Upload size={16} />} title="Import JSON" onClick={importJson} disabled={!s.doc} />
           <T icon={<Download size={16} />} title="Export JSON" onClick={exportJson} disabled={!s.doc} />
           <T icon={<Pencil size={16} />} title="Rename / move" onClick={() => void rename()} disabled={!s.doc} />
@@ -279,7 +283,12 @@ export function DesignPage() {
         </div>
         <div className="content-body">
           {loading && <div className="loading">Loading…</div>}
-          {!s.doc && !loading && <Empty><Box size={28} /><br />Open a display from the <b>Displays</b> tab or create a new one.</Empty>}
+          {!s.doc && !loading && (
+            <Empty>
+              <Box size={28} /><br />Open a display from the <b>Displays</b> tab, or start from a real use case.<br /><br />
+              <button className="primary" onClick={() => setGallery(true)}><LayoutTemplate size={14} /> Templates & use cases</button>
+            </Empty>
+          )}
           {s.doc && <DesignerCanvas />}
         </div>
         <div className="statusbar">
@@ -292,6 +301,8 @@ export function DesignPage() {
         </div>
       </main>
       <Sidebar side="right">{s.doc && <PropertyPanel />}</Sidebar>
+      {gallery && <TemplateGallery onClose={() => setGallery(false)} onAi={s.doc ? () => setAssistant(true) : undefined} />}
+      {assistant && <AiAssistant onClose={() => setAssistant(false)} />}
     </div>
   );
 }

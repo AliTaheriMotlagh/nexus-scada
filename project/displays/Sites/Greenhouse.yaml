@@ -1,0 +1,488 @@
+title: Smart greenhouse
+kind: page
+width: 1600
+height: 900
+background: "#0f1722"
+grid: 10
+elements:
+  - id: text1
+    type: text
+    x: 24
+    y: 12
+    w: 800
+    h: 43
+    props:
+      text: Smart greenhouse
+      fontSize: 24
+      color: "#e2e8f0"
+      fontWeight: "700"
+  - id: clock2
+    type: clock
+    x: 1400
+    y: 16
+    w: 180
+    h: 32
+    props:
+      format: datetime
+      fontSize: 14
+      color: "#94a3b8"
+  - id: rect3
+    type: rect
+    x: 16
+    y: 60
+    w: 1064
+    h: 566
+    props:
+      fill: "#111b27"
+      stroke: "#233244"
+      radius: 10
+    locked: true
+  - id: text4
+    type: text
+    x: 30
+    y: 66
+    w: 1036
+    h: 22
+    props:
+      text: GREENHOUSE
+      fontSize: 12
+      color: "#64748b"
+      fontWeight: "700"
+  - id: rect5
+    type: rect
+    x: 1092
+    y: 60
+    w: 492
+    h: 254
+    props:
+      fill: "#111b27"
+      stroke: "#233244"
+      radius: 10
+    locked: true
+  - id: text6
+    type: text
+    x: 1106
+    y: 66
+    w: 464
+    h: 22
+    props:
+      text: KEY FIGURES
+      fontSize: 12
+      color: "#64748b"
+      fontWeight: "700"
+  - id: rect7
+    type: rect
+    x: 1092
+    y: 326
+    w: 492
+    h: 300
+    props:
+      fill: "#111b27"
+      stroke: "#233244"
+      radius: 10
+    locked: true
+  - id: text8
+    type: text
+    x: 1106
+    y: 332
+    w: 464
+    h: 22
+    props:
+      text: TREND — 15 MIN
+      fontSize: 12
+      color: "#64748b"
+      fontWeight: "700"
+  - id: rect9
+    type: rect
+    x: 1092
+    y: 638
+    w: 492
+    h: 248
+    props:
+      fill: "#111b27"
+      stroke: "#233244"
+      radius: 10
+    locked: true
+  - id: text10
+    type: text
+    x: 1106
+    y: 644
+    w: 464
+    h: 22
+    props:
+      text: OPERATOR CONTROLS
+      fontSize: 12
+      color: "#64748b"
+      fontWeight: "700"
+  - id: rect11
+    type: rect
+    x: 60
+    y: 170
+    w: 700
+    h: 380
+    props:
+      fill: "#0c2a1c"
+      stroke: "#86efac"
+      strokeWidth: 2
+      radius: 6
+    locked: true
+  - id: rect12
+    type: rect
+    x: 60
+    y: 110
+    w: 700
+    h: 64
+    props:
+      fill: "#123524"
+      stroke: "#86efac"
+      strokeWidth: 2
+      radius: 4
+    locked: true
+  - id: lamp13
+    type: lamp
+    x: 110
+    y: 182
+    w: 60
+    h: 72
+    props:
+      onColor: "#e879f9"
+    bindings:
+      on:
+        tag: Sites/Greenhouse/GrowLights
+    tooltip: Grow light
+  - id: lamp14
+    type: lamp
+    x: 240
+    y: 182
+    w: 60
+    h: 72
+    props:
+      onColor: "#e879f9"
+    bindings:
+      on:
+        tag: Sites/Greenhouse/GrowLights
+    tooltip: Grow light
+  - id: lamp15
+    type: lamp
+    x: 370
+    y: 182
+    w: 60
+    h: 72
+    props:
+      onColor: "#e879f9"
+    bindings:
+      on:
+        tag: Sites/Greenhouse/GrowLights
+    tooltip: Grow light
+  - id: lamp16
+    type: lamp
+    x: 500
+    y: 182
+    w: 60
+    h: 72
+    props:
+      onColor: "#e879f9"
+    bindings:
+      on:
+        tag: Sites/Greenhouse/GrowLights
+    tooltip: Grow light
+  - id: lamp17
+    type: lamp
+    x: 630
+    y: 182
+    w: 60
+    h: 72
+    props:
+      onColor: "#e879f9"
+    bindings:
+      on:
+        tag: Sites/Greenhouse/GrowLights
+    tooltip: Grow light
+  - id: fan18
+    type: fan
+    x: 160
+    y: 106
+    w: 70
+    h: 70
+    props: {}
+    bindings:
+      running:
+        tag: Sites/Greenhouse/Fans
+  - id: fan19
+    type: fan
+    x: 560
+    y: 106
+    w: 70
+    h: 70
+    props: {}
+    bindings:
+      running:
+        tag: Sites/Greenhouse/Fans
+  - id: progress20
+    type: progress
+    x: 330
+    y: 132
+    w: 160
+    h: 20
+    props:
+      tag: Sites/Greenhouse/Vents
+      color: "#86efac"
+  - id: text21
+    type: text
+    x: 330
+    y: 108
+    w: 160
+    h: 20
+    props:
+      text: Roof vents
+      fontSize: 11
+      color: "#94a3b8"
+      align: center
+  - id: rect22
+    type: rect
+    x: 100
+    y: 380
+    w: 120
+    h: 120
+    props:
+      fill: "#365314"
+      stroke: "#65a30d"
+      radius: 8
+    locked: true
+  - id: rect23
+    type: rect
+    x: 260
+    y: 380
+    w: 120
+    h: 120
+    props:
+      fill: "#365314"
+      stroke: "#65a30d"
+      radius: 8
+    locked: true
+  - id: rect24
+    type: rect
+    x: 420
+    y: 380
+    w: 120
+    h: 120
+    props:
+      fill: "#365314"
+      stroke: "#65a30d"
+      radius: 8
+    locked: true
+  - id: rect25
+    type: rect
+    x: 580
+    y: 380
+    w: 120
+    h: 120
+    props:
+      fill: "#365314"
+      stroke: "#65a30d"
+      radius: 8
+    locked: true
+  - id: pipe26
+    type: pipe
+    x: 90
+    y: 352
+    w: 640
+    h: 18
+    props:
+      flowColor: "#38bdf8"
+    bindings:
+      flowing:
+        tag: Sites/Greenhouse/Irrigation
+        expr: value === true
+  - id: valve27
+    type: valve
+    x: 780
+    y: 324
+    w: 70
+    h: 70
+    props: {}
+    bindings:
+      open:
+        tag: Sites/Greenhouse/Irrigation
+    tooltip: Drip irrigation valve
+  - id: tank28
+    type: tank
+    x: 880
+    y: 260
+    w: 120
+    h: 220
+    props:
+      label: WATER
+      fillColor: "#38bdf8"
+    bindings:
+      level:
+        tag: Sites/Greenhouse/WaterTank
+  - id: boiler29
+    type: boiler
+    x: 880
+    y: 96
+    w: 90
+    h: 140
+    props: {}
+    bindings:
+      firing:
+        tag: Sites/Greenhouse/Heater
+    tooltip: Heater
+  - id: value30
+    type: value
+    x: 80
+    y: 560
+    w: 220
+    h: 34
+    props:
+      tag: Sites/Greenhouse/SoilMoisture
+      label: Soil
+      fontSize: 15
+      align: left
+  - id: value31
+    type: value
+    x: 320
+    y: 560
+    w: 220
+    h: 34
+    props:
+      tag: Sites/Greenhouse/Light
+      label: Light
+      fontSize: 15
+      align: left
+      decimals: 0
+  - id: value32
+    type: value
+    x: 560
+    y: 560
+    w: 200
+    h: 34
+    props:
+      tag: Sites/Greenhouse/CO2
+      label: CO₂
+      fontSize: 15
+      align: left
+      decimals: 0
+  - id: gauge33
+    type: gauge
+    x: 1104
+    y: 90
+    w: 150
+    h: 136
+    props:
+      tag: Sites/Greenhouse/AirTemp
+      min: 0
+      max: 40
+      label: Air
+      zones: 0:#3b82f6,15:#22c55e,30:#ef4444
+  - id: gauge34
+    type: gauge
+    x: 1262
+    y: 90
+    w: 150
+    h: 136
+    props:
+      tag: Sites/Greenhouse/Humidity
+      min: 0
+      max: 100
+      label: Humidity
+      decimals: 0
+      zones: 0:#f59e0b,50:#22c55e,88:#ef4444
+  - id: gauge35
+    type: gauge
+    x: 1420
+    y: 90
+    w: 150
+    h: 136
+    props:
+      tag: Sites/Greenhouse/SoilMoisture
+      min: 0
+      max: 80
+      label: Soil
+      decimals: 0
+      zones: 0:#ef4444,25:#22c55e,55:#3b82f6
+  - id: sparkline36
+    type: sparkline
+    x: 1104
+    y: 240
+    w: 468
+    h: 66
+    props:
+      tag: Sites/Greenhouse/Light
+      color: "#facc15"
+      decimals: 0
+  - id: trend37
+    type: trend
+    x: 1104
+    y: 356
+    w: 468
+    h: 258
+    props:
+      tags: Sites/Greenhouse/AirTemp,Sites/Greenhouse/Humidity,Sites/Greenhouse/SoilMoisture
+      minutes: 15
+      legend: false
+  - id: alarmTable38
+    type: alarmTable
+    x: 16
+    y: 638
+    w: 1064
+    h: 248
+    props:
+      area: Sites/Greenhouse
+      maxRows: 8
+  - id: switch39
+    type: switch
+    x: 1106
+    y: 674
+    w: 220
+    h: 32
+    props:
+      tag: Sites/Greenhouse/Auto
+      label: Automatic mode
+      onColor: "#6366f1"
+  - id: switch40
+    type: switch
+    x: 1106
+    y: 716
+    w: 220
+    h: 32
+    props:
+      tag: Sites/Greenhouse/Irrigation
+      label: Irrigation
+  - id: switch41
+    type: switch
+    x: 1340
+    y: 716
+    w: 230
+    h: 32
+    props:
+      tag: Sites/Greenhouse/GrowLights
+      label: Grow lights
+  - id: switch42
+    type: switch
+    x: 1106
+    y: 758
+    w: 220
+    h: 32
+    props:
+      tag: Sites/Greenhouse/Heater
+      label: Heater
+  - id: switch43
+    type: switch
+    x: 1340
+    y: 758
+    w: 230
+    h: 32
+    props:
+      tag: Sites/Greenhouse/Fans
+      label: Fans
+  - id: slider44
+    type: slider
+    x: 1106
+    y: 800
+    w: 466
+    h: 34
+    props:
+      tag: Sites/Greenhouse/Vents
+      color: "#86efac"
+name: Sites/Greenhouse

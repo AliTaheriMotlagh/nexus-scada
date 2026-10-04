@@ -1,0 +1,533 @@
+title: Bottling / packaging line (OEE)
+kind: page
+width: 1600
+height: 900
+background: "#0f1722"
+grid: 10
+elements:
+  - id: text1
+    type: text
+    x: 24
+    y: 12
+    w: 800
+    h: 43
+    props:
+      text: Bottling / packaging line (OEE)
+      fontSize: 24
+      color: "#e2e8f0"
+      fontWeight: "700"
+  - id: clock2
+    type: clock
+    x: 1400
+    y: 16
+    w: 180
+    h: 32
+    props:
+      format: datetime
+      fontSize: 14
+      color: "#94a3b8"
+  - id: rect3
+    type: rect
+    x: 16
+    y: 60
+    w: 1064
+    h: 566
+    props:
+      fill: "#111b27"
+      stroke: "#233244"
+      radius: 10
+    locked: true
+  - id: text4
+    type: text
+    x: 30
+    y: 66
+    w: 1036
+    h: 22
+    props:
+      text: LINE OVERVIEW
+      fontSize: 12
+      color: "#64748b"
+      fontWeight: "700"
+  - id: rect5
+    type: rect
+    x: 1092
+    y: 60
+    w: 492
+    h: 254
+    props:
+      fill: "#111b27"
+      stroke: "#233244"
+      radius: 10
+    locked: true
+  - id: text6
+    type: text
+    x: 1106
+    y: 66
+    w: 464
+    h: 22
+    props:
+      text: OEE
+      fontSize: 12
+      color: "#64748b"
+      fontWeight: "700"
+  - id: rect7
+    type: rect
+    x: 1092
+    y: 326
+    w: 492
+    h: 300
+    props:
+      fill: "#111b27"
+      stroke: "#233244"
+      radius: 10
+    locked: true
+  - id: text8
+    type: text
+    x: 1106
+    y: 332
+    w: 464
+    h: 22
+    props:
+      text: TREND — 15 MIN
+      fontSize: 12
+      color: "#64748b"
+      fontWeight: "700"
+  - id: rect9
+    type: rect
+    x: 1092
+    y: 638
+    w: 492
+    h: 248
+    props:
+      fill: "#111b27"
+      stroke: "#233244"
+      radius: 10
+    locked: true
+  - id: text10
+    type: text
+    x: 1106
+    y: 644
+    w: 464
+    h: 22
+    props:
+      text: OPERATOR CONTROLS
+      fontSize: 12
+      color: "#64748b"
+      fontWeight: "700"
+  - id: rect11
+    type: rect
+    x: 40
+    y: 120
+    w: 170
+    h: 150
+    props:
+      fill: "#1e293b"
+      stroke: "#334155"
+      radius: 10
+      gradient: true
+    bindings:
+      stroke:
+        tag: Sites/Line1/FaultStation
+        expr: "value === 'Infeed' ? '#ef4444' : '#334155'"
+  - id: text12
+    type: text
+    x: 50
+    y: 128
+    w: 150
+    h: 23
+    props:
+      text: INFEED
+      fontSize: 13
+      color: "#e2e8f0"
+      align: center
+      fontWeight: "700"
+  - id: motor13
+    type: motor
+    x: 65
+    y: 170
+    w: 120
+    h: 80
+    props: {}
+    bindings:
+      running: &a1
+        tag: Sites/Line1/State
+        expr: value === 'Running'
+      fault:
+        tag: Sites/Line1/FaultStation
+        expr: value === 'Infeed'
+  - id: conveyor14
+    type: conveyor
+    x: 205
+    y: 300
+    w: 210
+    h: 40
+    props: {}
+    bindings:
+      running: *a1
+  - id: rect15
+    type: rect
+    x: 245
+    y: 120
+    w: 170
+    h: 150
+    props:
+      fill: "#1e293b"
+      stroke: "#334155"
+      radius: 10
+      gradient: true
+    bindings:
+      stroke:
+        tag: Sites/Line1/FaultStation
+        expr: "value === 'Filler' ? '#ef4444' : '#334155'"
+  - id: text16
+    type: text
+    x: 255
+    y: 128
+    w: 150
+    h: 23
+    props:
+      text: FILLER
+      fontSize: 13
+      color: "#e2e8f0"
+      align: center
+      fontWeight: "700"
+  - id: motor17
+    type: motor
+    x: 270
+    y: 170
+    w: 120
+    h: 80
+    props: {}
+    bindings:
+      running: *a1
+      fault:
+        tag: Sites/Line1/FaultStation
+        expr: value === 'Filler'
+  - id: conveyor18
+    type: conveyor
+    x: 410
+    y: 300
+    w: 210
+    h: 40
+    props: {}
+    bindings:
+      running: *a1
+  - id: rect19
+    type: rect
+    x: 450
+    y: 120
+    w: 170
+    h: 150
+    props:
+      fill: "#1e293b"
+      stroke: "#334155"
+      radius: 10
+      gradient: true
+    bindings:
+      stroke:
+        tag: Sites/Line1/FaultStation
+        expr: "value === 'Capper' ? '#ef4444' : '#334155'"
+  - id: text20
+    type: text
+    x: 460
+    y: 128
+    w: 150
+    h: 23
+    props:
+      text: CAPPER
+      fontSize: 13
+      color: "#e2e8f0"
+      align: center
+      fontWeight: "700"
+  - id: motor21
+    type: motor
+    x: 475
+    y: 170
+    w: 120
+    h: 80
+    props: {}
+    bindings:
+      running: *a1
+      fault:
+        tag: Sites/Line1/FaultStation
+        expr: value === 'Capper'
+  - id: conveyor22
+    type: conveyor
+    x: 615
+    y: 300
+    w: 210
+    h: 40
+    props: {}
+    bindings:
+      running: *a1
+  - id: rect23
+    type: rect
+    x: 655
+    y: 120
+    w: 170
+    h: 150
+    props:
+      fill: "#1e293b"
+      stroke: "#334155"
+      radius: 10
+      gradient: true
+    bindings:
+      stroke:
+        tag: Sites/Line1/FaultStation
+        expr: "value === 'Labeler' ? '#ef4444' : '#334155'"
+  - id: text24
+    type: text
+    x: 665
+    y: 128
+    w: 150
+    h: 23
+    props:
+      text: LABELER
+      fontSize: 13
+      color: "#e2e8f0"
+      align: center
+      fontWeight: "700"
+  - id: motor25
+    type: motor
+    x: 680
+    y: 170
+    w: 120
+    h: 80
+    props: {}
+    bindings:
+      running: *a1
+      fault:
+        tag: Sites/Line1/FaultStation
+        expr: value === 'Labeler'
+  - id: conveyor26
+    type: conveyor
+    x: 820
+    y: 300
+    w: 210
+    h: 40
+    props: {}
+    bindings:
+      running: *a1
+  - id: rect27
+    type: rect
+    x: 860
+    y: 120
+    w: 170
+    h: 150
+    props:
+      fill: "#1e293b"
+      stroke: "#334155"
+      radius: 10
+      gradient: true
+    bindings:
+      stroke:
+        tag: Sites/Line1/FaultStation
+        expr: "value === 'Packer' ? '#ef4444' : '#334155'"
+  - id: text28
+    type: text
+    x: 870
+    y: 128
+    w: 150
+    h: 23
+    props:
+      text: PACKER
+      fontSize: 13
+      color: "#e2e8f0"
+      align: center
+      fontWeight: "700"
+  - id: motor29
+    type: motor
+    x: 885
+    y: 170
+    w: 120
+    h: 80
+    props: {}
+    bindings:
+      running: *a1
+      fault:
+        tag: Sites/Line1/FaultStation
+        expr: value === 'Packer'
+  - id: conveyor30
+    type: conveyor
+    x: 40
+    y: 300
+    w: 170
+    h: 40
+    props: {}
+    bindings:
+      running: *a1
+  - id: multistate31
+    type: multistate
+    x: 40
+    y: 380
+    w: 300
+    h: 50
+    props:
+      tag: Sites/Line1/State
+      states: Running:RUNNING:#16a34a,Stopped:STOPPED:#475569,Fault:FAULT:#dc2626,Starved:STARVED:#ca8a04
+  - id: value32
+    type: value
+    x: 360
+    y: 380
+    w: 330
+    h: 50
+    props:
+      tag: Sites/Line1/FaultStation
+      label: Fault at
+      fontSize: 18
+      color: "#fca5a5"
+  - id: value33
+    type: value
+    x: 40
+    y: 450
+    w: 300
+    h: 34
+    props:
+      tag: Sites/Line1/Good
+      label: Good
+      fontSize: 22
+      align: left
+      decimals: 0
+  - id: value34
+    type: value
+    x: 360
+    y: 450
+    w: 330
+    h: 34
+    props:
+      tag: Sites/Line1/Rejects
+      label: Rejects
+      fontSize: 22
+      align: left
+      decimals: 0
+      color: "#fca5a5"
+  - id: value35
+    type: value
+    x: 710
+    y: 380
+    w: 340
+    h: 34
+    props:
+      tag: Sites/Line1/Speed
+      label: Speed
+      fontSize: 18
+      align: left
+      decimals: 0
+  - id: value36
+    type: value
+    x: 710
+    y: 450
+    w: 340
+    h: 34
+    props:
+      tag: Sites/Line1/FillerTemp
+      label: Filler temp
+      fontSize: 18
+      align: left
+  - id: gauge37
+    type: gauge
+    x: 1104
+    y: 90
+    w: 150
+    h: 136
+    props:
+      tag: Sites/Line1/OEE
+      min: 0
+      max: 100
+      label: OEE
+      decimals: 0
+      zones: 0:#ef4444,60:#f59e0b,85:#22c55e
+  - id: barChart38
+    type: barChart
+    x: 1262
+    y: 88
+    w: 310
+    h: 214
+    props:
+      tags: Sites/Line1/Availability,Sites/Line1/Performance,Sites/Line1/Quality,Sites/Line1/OEE
+      labels: Avail.,Perf.,Quality,OEE
+      max: 100
+      decimals: 0
+      color: "#22c55e"
+  - id: value39
+    type: value
+    x: 1104
+    y: 250
+    w: 150
+    h: 34
+    props:
+      tag: Sites/Line1/Availability
+      label: A
+      fontSize: 15
+      align: left
+      decimals: 0
+  - id: trend40
+    type: trend
+    x: 1104
+    y: 356
+    w: 468
+    h: 258
+    props:
+      tags: Sites/Line1/Speed,Sites/Line1/OEE
+      minutes: 15
+      legend: false
+  - id: alarmTable41
+    type: alarmTable
+    x: 16
+    y: 638
+    w: 1064
+    h: 248
+    props:
+      area: Sites/Line1
+      maxRows: 8
+  - id: button42
+    type: button
+    x: 1106
+    y: 674
+    w: 220
+    h: 44
+    props:
+      text: ▶ Start line
+      action: write
+      tag: Sites/Line1/Running
+      value: "true"
+      color: "#16a34a"
+  - id: button43
+    type: button
+    x: 1340
+    y: 674
+    w: 230
+    h: 44
+    props:
+      text: ■ Stop line
+      action: write
+      tag: Sites/Line1/Running
+      value: "false"
+      color: "#b91c1c"
+      confirm: true
+  - id: slider44
+    type: slider
+    x: 1106
+    y: 730
+    w: 466
+    h: 34
+    props:
+      tag: Sites/Line1/Speed
+      min: 0
+      max: 150
+      step: 5
+  - id: button45
+    type: button
+    x: 1106
+    y: 778
+    w: 466
+    h: 40
+    props:
+      text: Reset shift counters
+      color: "#334155"
+      confirm: true
+    events:
+      click: |-
+        await tags.writeMany({ 'Sites/Line1/Good': 0, 'Sites/Line1/Rejects': 0, 'Sites/Line1/RunSeconds': 1, 'Sites/Line1/TotalSeconds': 1 });
+        ui.toast('Shift counters reset', 'success');
+name: Sites/Line1
