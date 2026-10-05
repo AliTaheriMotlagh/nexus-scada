@@ -1,0 +1,713 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nexus SCADA User Guide</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #1a1a1a;
+      --border: #e0e0e0;
+      --accent: #0066cc;
+      --code-bg: #f5f5f5;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #1a1a1a;
+        --text: #e0e0e0;
+        --border: #333333;
+        --accent: #66b3ff;
+        --code-bg: #2a2a2a;
+      }
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 { font-size: 2.5em; margin: 0.5em 0; border-bottom: 3px solid var(--accent); padding-bottom: 0.2em; }
+    h2 { font-size: 1.8em; margin: 1.5em 0 0.5em; color: var(--accent); }
+    h3 { font-size: 1.3em; margin: 1.2em 0 0.4em; }
+    h4 { font-size: 1.1em; margin: 1em 0 0.3em; font-weight: 600; }
+
+    .section { margin: 2em 0; padding: 1.5em; background: rgba(0,0,0,0.02); border-radius: 8px; border-left: 4px solid var(--accent); }
+    @media (prefers-color-scheme: dark) {
+      .section { background: rgba(255,255,255,0.05); }
+    }
+
+    .step { margin: 1.5em 0; padding: 1em; background: rgba(102,179,255,0.08); border-radius: 6px; border-left: 3px solid var(--accent); }
+    @media (prefers-color-scheme: dark) {
+      .step { background: rgba(102,179,255,0.12); }
+    }
+
+    .step-number { display: inline-block; font-weight: bold; color: var(--accent); font-size: 1.1em; margin-right: 0.5em; }
+    .tip { background: rgba(34,139,34,0.1); border-left: 3px solid #228B22; padding: 1em; border-radius: 6px; margin: 1em 0; }
+    .warning { background: rgba(255,165,0,0.1); border-left: 3px solid #FFA500; padding: 1em; border-radius: 6px; margin: 1em 0; }
+
+    code { background: var(--code-bg); padding: 0.2em 0.6em; border-radius: 4px; font-family: 'Monaco', 'Menlo', monospace; font-size: 0.9em; }
+    pre { background: var(--code-bg); padding: 1em; border-radius: 6px; overflow-x: auto; border: 1px solid var(--border); }
+    pre code { padding: 0; background: none; }
+
+    ul, ol { margin: 0.5em 0; padding-left: 1.5em; }
+    li { margin: 0.5em 0; }
+
+    .table-wrap { overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+    th, td { border: 1px solid var(--border); padding: 0.75em; text-align: left; }
+    th { background: rgba(0,102,204,0.1); font-weight: 600; }
+    @media (prefers-color-scheme: dark) {
+      th { background: rgba(102,179,255,0.15); }
+    }
+
+    .toc { background: rgba(0,0,0,0.03); padding: 1.5em; border-radius: 8px; }
+    @media (prefers-color-scheme: dark) {
+      .toc { background: rgba(255,255,255,0.05); }
+    }
+    .toc a { color: var(--accent); text-decoration: none; }
+    .toc a:hover { text-decoration: underline; }
+
+    button { background: var(--accent); color: #fff; border: none; padding: 0.5em 1em; border-radius: 4px; cursor: pointer; font-size: 0.95em; }
+    button:hover { opacity: 0.9; }
+
+    .keyboard { background: var(--code-bg); border: 1px solid var(--border); padding: 0.3em 0.6em; border-radius: 3px; font-size: 0.85em; font-weight: 500; display: inline-block; }
+  </style>
+</head>
+<body>
+
+<h1>📊 Nexus SCADA User Guide</h1>
+<p><strong>Complete step-by-step instructions for operating the HMI system</strong></p>
+
+<div class="toc">
+  <h3>Quick Navigation</h3>
+  <ul>
+    <li><a href="#getting-started">Getting Started</a></li>
+    <li><a href="#accessing-system">Accessing the System</a></li>
+    <li><a href="#main-interface">Main Interface Overview</a></li>
+    <li><a href="#viewing-displays">Viewing & Operating Displays</a></li>
+    <li><a href="#monitoring-alarms">Monitoring Alarms</a></li>
+    <li><a href="#viewing-trends">Viewing Trends & History</a></li>
+    <li><a href="#operating-controls">Operating Controls</a></li>
+    <li><a href="#creating-displays">Creating/Editing Displays (Engineers)</a></li>
+    <li><a href="#configuration">Configuration & Settings</a></li>
+    <li><a href="#tips">Tips & Troubleshooting</a></li>
+  </ul>
+</div>
+
+<div id="getting-started" class="section">
+  <h2>🚀 Getting Started</h2>
+  <p>Nexus SCADA is an industrial monitoring and control system for plants, facilities, and smart homes. It displays real-time data, alerts you to problems, and lets you operate equipment.</p>
+
+  <h3>What You'll Do</h3>
+  <ul>
+    <li><strong>Monitor</strong> equipment status and sensor readings</li>
+    <li><strong>Operate</strong> valves, pumps, switches and other devices</li>
+    <li><strong>View Alarms</strong> and respond to issues</li>
+    <li><strong>Analyze Trends</strong> using historical data</li>
+    <li><strong>Design Pages</strong> (engineers only) to display information</li>
+  </ul>
+</div>
+
+<div id="accessing-system" class="section">
+  <h2>🔐 Accessing the System</h2>
+
+  <div class="step">
+    <span class="step-number">Step 1:</span> Open your web browser and go to:
+    <pre>http://localhost:8080</pre>
+    Or the public URL if the system is hosted online.
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 2:</span> If a login screen appears, enter your credentials:
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Role</th><th>Username</th><th>Password</th><th>Permissions</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Administrator</td><td><code>admin</code></td><td><code>admin</code></td><td>Full control, configuration, users</td></tr>
+          <tr><td>Engineer</td><td><code>engineer</code></td><td><code>engineer</code></td><td>Design pages, scripts, view all data</td></tr>
+          <tr><td>Operator</td><td><code>operator</code></td><td><code>operator</code></td><td>Operate equipment, view data</td></tr>
+          <tr><td>Viewer</td><td>No login</td><td>N/A</td><td>View-only access (if enabled)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 3:</span> Click <button>Sign In</button> or wait for automatic redirect to the main display.
+  </div>
+
+  <div class="tip">
+    💡 <strong>Tip:</strong> If you forget your password, contact your system administrator. They can reset it in the configuration.
+  </div>
+</div>
+
+<div id="main-interface" class="section">
+  <h2>🖥️ Main Interface Overview</h2>
+
+  <h3>Navigation</h3>
+  <p>The left sidebar contains the main menu:</p>
+  <ul>
+    <li><strong>Runtime</strong> – View the current process displays</li>
+    <li><strong>Alarms</strong> – See active alarms and events</li>
+    <li><strong>Trends</strong> – View historical data graphs</li>
+    <li><strong>Map</strong> – Geographic view of sites (if configured)</li>
+    <li><strong>Tags</strong> – Browse all data points in the system</li>
+    <li><strong>Devices</strong> – See device status and diagnostics</li>
+    <li><strong>Recipes</strong> – Load/save parameter sets</li>
+    <li><strong>Designer</strong> – Create and edit display pages (engineers only)</li>
+    <li><strong>Scripts</strong> – View and test automation scripts (engineers only)</li>
+    <li><strong>Config</strong> – Edit project configuration (admins only)</li>
+    <li><strong>System</strong> – View logs and settings (admins only)</li>
+  </ul>
+
+  <h3>Top Bar</h3>
+  <ul>
+    <li><strong>Display/Page dropdown</strong> – Switch between different pages</li>
+    <li><strong>Search bar</strong> – Find tags, displays, and information</li>
+    <li><strong>Theme toggle</strong> – Switch between dark and light modes</li>
+    <li><strong>User menu</strong> – See your role, sign out</li>
+  </ul>
+</div>
+
+<div id="viewing-displays" class="section">
+  <h2>📺 Viewing & Operating Displays</h2>
+
+  <h3>Navigating to a Display</h3>
+
+  <div class="step">
+    <span class="step-number">Step 1:</span> Click <strong>Runtime</strong> in the left sidebar.
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 2:</span> In the displays panel, expand folders and select a display page (e.g., <code>Plant/Overview</code>).
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 3:</span> The display appears in the center. You'll see:
+    <ul>
+      <li><strong>Visual elements</strong> – Tanks, pumps, gauges, values</li>
+      <li><strong>Real-time data</strong> – Values update every 100ms</li>
+      <li><strong>Color indicators</strong> – Green = OK, yellow/orange = warning, red = alarm</li>
+      <li><strong>Interactive controls</strong> – Buttons, switches, sliders (if you have operator role)</li>
+    </ul>
+  </div>
+
+  <h3>Understanding Display Elements</h3>
+  <ul>
+    <li><strong>Gauge</strong> – Shows a numeric value on a scale</li>
+    <li><strong>Value Display</strong> – Shows a number or text</li>
+    <li><strong>Tank/Cylinder</strong> – Shows a filled level visually</li>
+    <li><strong>LED Indicator</strong> – Red/green light showing on/off status</li>
+    <li><strong>Pump/Motor Icon</strong> – Shows running (animated) or stopped</li>
+    <li><strong>Button</strong> – Click to execute an action</li>
+    <li><strong>Switch/Slider</strong> – Drag to change a value</li>
+  </ul>
+
+  <div class="tip">
+    💡 <strong>Tip:</strong> Hover over any element to see its name and current value.
+  </div>
+</div>
+
+<div id="monitoring-alarms" class="section">
+  <h2>🚨 Monitoring Alarms</h2>
+
+  <h3>Alarm Bar (Top Right)</h3>
+  <p>The alarm bar shows a summary of active alarms:</p>
+
+  <div class="step">
+    <span class="step-number">Step 1:</span> Look at the top-right corner for the alarm badge showing the count of active alarms.
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 2:</span> Click on the alarm badge to open the alarm bar and see:
+    <ul>
+      <li>Alarm count and severity (critical, high, medium, low)</li>
+      <li>Alarm horn status (muted or active)</li>
+      <li>Option to silence the alarm sound</li>
+    </ul>
+  </div>
+
+  <h3>Viewing Alarm Details</h3>
+
+  <div class="step">
+    <span class="step-number">Step 1:</span> Click <strong>Alarms</strong> in the left sidebar to open the Alarm Viewer.
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 2:</span> You'll see tabs for:
+    <ul>
+      <li><strong>Active</strong> – Alarms that are currently happening</li>
+      <li><strong>Shelved</strong> – Temporarily suppressed alarms</li>
+      <li><strong>History</strong> – Past events</li>
+    </ul>
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 3:</span> For each alarm, you can see:
+    <ul>
+      <li><strong>Message</strong> – What the problem is (e.g., "Tank level too high")</li>
+      <li><strong>Severity</strong> – Critical, High, Medium, or Low</li>
+      <li><strong>Time</strong> – When it started</li>
+      <li><strong>Status</strong> – Active or acknowledged</li>
+    </ul>
+  </div>
+
+  <h3>Acknowledging an Alarm</h3>
+
+  <div class="step">
+    <span class="step-number">Step 1:</span> In the Alarm Viewer, click on an active alarm to select it.
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 2:</span> Click <button>Acknowledge</button> button.
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 3:</span> Optionally add a comment (e.g., "Pump repair in progress") and click <button>OK</button>.
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 4:</span> The alarm moves to the "Acknowledged" state but remains visible until the condition clears.
+  </div>
+
+  <div class="warning">
+    ⚠️ <strong>Important:</strong> Acknowledging an alarm does NOT fix the problem. Take corrective action (operate equipment, check the process) to resolve the underlying issue.
+  </div>
+</div>
+
+<div id="viewing-trends" class="section">
+  <h2>📈 Viewing Trends & Historical Data</h2>
+
+  <h3>Opening the Trends Page</h3>
+
+  <div class="step">
+    <span class="step-number">Step 1:</span> Click <strong>Trends</strong> in the left sidebar.
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 2:</span> The trend viewer opens with:
+    <ul>
+      <li>Empty graph ready for data</li>
+      <li>Time range selector (e.g., last 1 hour, 24 hours, 7 days)</li>
+      <li>Tag selector to add data to the graph</li>
+    </ul>
+  </div>
+
+  <h3>Adding Data to a Trend</h3>
+
+  <div class="step">
+    <span class="step-number">Step 1:</span> Click the <strong>Tag Picker</strong> button to select which tag to graph.
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 2:</span> A tree of available tags appears. Expand folders and select a tag (e.g., <code>Plant/Area1/Tank1/Level</code>).
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 3:</span> The trend line appears on the graph showing historical values.
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 4:</span> Add up to 10 more pens (different tags) by repeating steps 1-3.
+  </div>
+
+  <h3>Interacting with Trends</h3>
+  <ul>
+    <li><strong>Drag to zoom</strong> – Click and drag on the graph to zoom into a time range</li>
+    <li><strong>Hover for values</strong> – Move your cursor over the line to see exact values and timestamps</li>
+    <li><strong>Change time range</strong> – Use the time selector to view last hour, day, week, month, or custom range</li>
+    <li><strong>Export to CSV</strong> – Click <button>Export</button> to download data</li>
+  </ul>
+
+  <div class="tip">
+    💡 <strong>Tip:</strong> Use trends to identify patterns, find when alarms started, and analyze process performance.
+  </div>
+</div>
+
+<div id="operating-controls" class="section">
+  <h2>🎮 Operating Controls</h2>
+
+  <h3>Button</h3>
+  <p>Buttons perform actions when clicked:</p>
+  <ul>
+    <li><strong>Simple button</strong> – Writes a value or triggers an action</li>
+    <li><strong>Toggle button</strong> – Switches a value on/off with each click</li>
+    <li><strong>Pulse button</strong> – Briefly turns something on then off (e.g., start/stop)</li>
+    <li><strong>Confirmation button</strong> – Asks "Are you sure?" before executing</li>
+  </ul>
+
+  <div class="step">
+    <span class="step-number">Step 1:</span> Click the button on the display.
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 2:</span> If confirmation is required, a dialog appears. Click <button>Confirm</button> to proceed.
+  </div>
+
+  <h3>Switch / Toggle</h3>
+  <p>Switches turn things on or off:</p>
+
+  <div class="step">
+    <span class="step-number">Step 1:</span> Click or drag the switch to the ON or OFF position.
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 2:</span> The system sends the command and the switch updates to reflect the new state.
+  </div>
+
+  <h3>Slider</h3>
+  <p>Sliders set numeric values (e.g., setpoint, speed):</p>
+
+  <div class="step">
+    <span class="step-number">Step 1:</span> Click and drag the slider handle to the desired position.
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 2:</span> Release to send the command.
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 3:</span> The value display updates to show the new setpoint.
+  </div>
+
+  <div class="tip">
+    💡 <strong>Tip:</strong> For precise input, click the numeric value field and type the number directly instead of dragging.
+  </div>
+
+  <h3>Numeric Input / Text Input</h3>
+  <p>Enter values directly by clicking the input field:</p>
+
+  <div class="step">
+    <span class="step-number">Step 1:</span> Click on the input field.
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 2:</span> Clear the current value and type the new number or text.
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 3:</span> Press <span class="keyboard">Enter</span> to send the value, or press <span class="keyboard">Esc</span> to cancel.
+  </div>
+
+  <h3>Dropdown / Selector</h3>
+  <p>Choose from predefined options:</p>
+
+  <div class="step">
+    <span class="step-number">Step 1:</span> Click on the dropdown.
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 2:</span> Select an option from the list (e.g., "Mode: Auto", "Mode: Manual").
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 3:</span> The system sends the command.
+  </div>
+
+  <div class="warning">
+    ⚠️ <strong>Safety Note:</strong> Be careful when operating equipment. Verify that the action is correct before pressing a button or moving a slider. Some operations may have consequences for the process.
+  </div>
+</div>
+
+<div id="creating-displays" class="section">
+  <h2>✏️ Creating & Editing Displays (Engineers)</h2>
+
+  <p><strong>This section is for engineers who design the visual interface.</strong></p>
+
+  <h3>Accessing the Designer</h3>
+
+  <div class="step">
+    <span class="step-number">Step 1:</span> Click <strong>Designer</strong> in the left sidebar.
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 2:</span> You'll see:
+    <ul>
+      <li><strong>Displays tree</strong> (left) – List of all pages</li>
+      <li><strong>Canvas</strong> (center) – Your design area</li>
+      <li><strong>Element palette</strong> (left panel) – Available symbols and controls</li>
+      <li><strong>Layers panel</strong> (right) – All elements on this page</li>
+      <li><strong>Property panel</strong> (right) – Customize selected element</li>
+    </ul>
+  </div>
+
+  <h3>Creating a New Display</h3>
+
+  <div class="step">
+    <span class="step-number">Step 1:</span> In the Displays tree, click the <strong>+ New</strong> button.
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 2:</span> Enter a name for your page (e.g., <code>Plant/Tank Status</code>).
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 3:</span> The new blank page opens in the canvas.
+  </div>
+
+  <h3>Adding Elements to the Canvas</h3>
+
+  <div class="step">
+    <span class="step-number">Step 1:</span> In the Element Palette (left), find and click an element type (e.g., "Tank", "Pump", "Gauge").
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 2:</span> Move your cursor to the canvas and click to place the element.
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 3:</span> The element appears on the canvas and is selected. You can see its properties on the right.
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 4:</span> <strong>Resize:</strong> Drag the corner handles to make it larger or smaller.
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 5:</span> <strong>Move:</strong> Drag the element to reposition it.
+  </div>
+
+  <h3>Binding Elements to Tags</h3>
+  <p>Connect visual elements to real process data:</p>
+
+  <div class="step">
+    <span class="step-number">Step 1:</span> Select an element (e.g., a gauge or tank).
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 2:</span> In the Property Panel (right), find the <strong>Tag</strong> or <strong>Value</strong> field.
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 3:</span> Click the tag picker icon and select a tag (e.g., <code>Plant/Area1/Tank1/Level</code>).
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 4:</span> The element now shows live data from that tag. The gauge needle moves, the tank fills, or the value updates in real-time.
+  </div>
+
+  <h3>Adding Interactive Controls</h3>
+
+  <div class="step">
+    <span class="step-number">Step 1:</span> Add a button or switch from the palette.
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 2:</span> Select it and find the <strong>Write Tag</strong> field in properties.
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 3:</span> Select the tag to write to (e.g., <code>Plant/Area1/Pump/Command</code>).
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 4:</span> Set the <strong>Value</strong> to write when clicked (e.g., <code>true</code> for ON, <code>false</code> for OFF).
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 5:</span> Toggle to <strong>Preview Mode</strong> to test that the control works.
+  </div>
+
+  <h3>Design Tips</h3>
+  <ul>
+    <li><strong>Use meaningful names</strong> – Label elements so operators understand what they control</li>
+    <li><strong>Group related items</strong> – Group pump, valve, and sensor readings for the same tank</li>
+    <li><strong>Choose colors carefully</strong> – Red for active/alarms, green for ok, gray for off</li>
+    <li><strong>Add text labels</strong> – Use text elements to explain units (L, m³/h, °C)</li>
+    <li><strong>Organize by section</strong> – Create separate pages for different areas (Area1, Area2, etc.)</li>
+  </ul>
+
+  <h3>Saving Your Design</h3>
+
+  <div class="step">
+    <span class="step-number">Step 1:</span> Click <button>Save</button> in the toolbar (or press <span class="keyboard">Ctrl</span> + <span class="keyboard">S</span>).
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 2:</span> The design is saved. You'll see a notification confirming success.
+  </div>
+
+  <div class="tip">
+    💡 <strong>Tip:</strong> Use undo (<span class="keyboard">Ctrl</span> + <span class="keyboard">Z</span>) and redo (<span class="keyboard">Ctrl</span> + <span class="keyboard">Y</span>) to fix mistakes.
+  </div>
+</div>
+
+<div id="configuration" class="section">
+  <h2>⚙️ Configuration & Settings</h2>
+
+  <p><strong>This section is for administrators who configure the system.</strong></p>
+
+  <h3>Accessing Configuration</h3>
+
+  <div class="step">
+    <span class="step-number">Step 1:</span> Click <strong>Config</strong> in the left sidebar (admin only).
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 2:</span> You'll see the project configuration tabs:
+    <ul>
+      <li><strong>Project</strong> – System name, description, version</li>
+      <li><strong>Nodes</strong> – Device tree, data sources, drivers</li>
+      <li><strong>Tags</strong> – Data point definitions</li>
+      <li><strong>Scripts</strong> – Automation routines</li>
+      <li><strong>Schedules</strong> – Cron jobs and time-based triggers</li>
+      <li><strong>Recipes</strong> – Named parameter sets</li>
+      <li><strong>Users</strong> – User accounts and roles</li>
+      <li><strong>Notifications</strong> – Alarm routing to email, Slack, SMS</li>
+      <li><strong>Map</strong> – Geographic site locations</li>
+    </ul>
+  </div>
+
+  <h3>Adding a User</h3>
+
+  <div class="step">
+    <span class="step-number">Step 1:</span> Go to <strong>Config</strong> → <strong>Users</strong> tab.
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 2:</span> Click <button>Add User</button>.
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 3:</span> Fill in:
+    <ul>
+      <li><strong>Username</strong> – Login name (e.g., <code>john.smith</code>)</li>
+      <li><strong>Full Name</strong> – Display name</li>
+      <li><strong>Role</strong> – viewer, operator, engineer, or admin</li>
+      <li><strong>Password</strong> – Initial password</li>
+    </ul>
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 4:</span> Click <button>Save</button>.
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 5:</span> The user can now log in with their credentials.
+  </div>
+
+  <h3>Editing Project Settings</h3>
+
+  <div class="step">
+    <span class="step-number">Step 1:</span> Go to <strong>Config</strong> → <strong>Project</strong> tab.
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 2:</span> Edit settings like:
+    <ul>
+      <li><strong>Project Name</strong> – Display title</li>
+      <li><strong>Description</strong> – What this system controls</li>
+      <li><strong>Start Display</strong> – Which page appears on login</li>
+      <li><strong>Historian Retention</strong> – How long to keep historical data</li>
+      <li><strong>Anonymous Role</strong> – Allow public viewing (set to "viewer" or null to require login)</li>
+    </ul>
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 3:</span> Click <button>Save</button>. Changes apply immediately.
+  </div>
+
+  <h3>Viewing Configuration History</h3>
+
+  <div class="step">
+    <span class="step-number">Step 1:</span> In Config, click the <strong>History</strong> tab.
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 2:</span> You'll see a list of all configuration changes with timestamps and authors.
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 3:</span> Click on any revision to see a diff of what changed.
+  </div>
+
+  <div class="step">
+    <span class="step-number">Step 4:</span> Click <button>Restore</button> to revert to a previous version.
+  </div>
+</div>
+
+<div id="tips" class="section">
+  <h2>💡 Tips & Troubleshooting</h2>
+
+  <h3>General Tips</h3>
+  <ul>
+    <li><strong>Keyboard shortcuts:</strong> <span class="keyboard">Ctrl</span> + <span class="keyboard">F</span> to search for tags or displays</li>
+    <li><strong>Responsive design:</strong> The system works on phones and tablets – zoom and scroll as needed</li>
+    <li><strong>Dark mode:</strong> Click the theme toggle in the top bar to switch between light and dark</li>
+    <li><strong>Real-time updates:</strong> Data updates every 100ms for subscribed tags – no need to refresh</li>
+    <li><strong>Auto-save:</strong> Designs and configuration changes are auto-saved frequently</li>
+  </ul>
+
+  <h3>Common Issues</h3>
+
+  <h4>❌ "Device Offline" or "Connection Error"</h4>
+  <ul>
+    <li><strong>Check the server:</strong> Make sure the Nexus SCADA server is running</li>
+    <li><strong>Check the network:</strong> Verify your computer can reach the server's IP/URL</li>
+    <li><strong>Refresh the page:</strong> Press <span class="keyboard">Ctrl</span> + <span class="keyboard">F5</span> to reload</li>
+    <li><strong>Check the device:</strong> The actual equipment (PLC, sensor, etc.) may be offline</li>
+  </ul>
+
+  <h4>❌ "Permission Denied" When Operating a Control</h4>
+  <ul>
+    <li><strong>Check your role:</strong> Your user account may not have permission to write to this tag</li>
+    <li><strong>Contact admin:</strong> Ask your administrator to upgrade your role to "operator" or "engineer"</li>
+  </ul>
+
+  <h4>❌ Data Not Updating on Display</h4>
+  <ul>
+    <li><strong>Check tag binding:</strong> Make sure the element is bound to the correct tag path</li>
+    <li><strong>Check device driver:</strong> The data source (modbus, MQTT, etc.) may be disconnected</li>
+    <li><strong>View diagnostics:</strong> Go to Config → Devices to see connection status</li>
+  </ul>
+
+  <h4>❌ Alarms Not Triggering</h4>
+  <ul>
+    <li><strong>Check alarm configuration:</strong> Alarms are defined in Config → Tags for each tag</li>
+    <li><strong>Verify thresholds:</strong> The current value may not have exceeded the alarm limit</li>
+    <li><strong>Check notification routing:</strong> Ensure email/SMS settings are configured if you expect external notifications</li>
+  </ul>
+
+  <h3>Performance</h3>
+  <ul>
+    <li><strong>Many tags?</strong> – Subscribe only to the tags you need to reduce bandwidth</li>
+    <li><strong>Slow trends?</strong> – Reduce the number of pens and use a shorter time range</li>
+    <li><strong>Large displays?</strong> – Break them into smaller, focused pages</li>
+  </ul>
+
+  <h3>Safety Best Practices</h3>
+  <ul>
+    <li>🔒 <strong>Secure your account:</strong> Use a strong password and keep it confidential</li>
+    <li>📋 <strong>Document actions:</strong> When acknowledging alarms, add comments explaining what you did</li>
+    <li>⚠️ <strong>Test carefully:</strong> Before deploying to production, test all controls in a safe environment</li>
+    <li>👥 <strong>Follow procedures:</strong> Your facility should have standard operating procedures (SOPs) for critical operations</li>
+    <li>🚨 <strong>Respond to alarms:</strong> Don't ignore alarms – investigate and fix the underlying problem</li>
+  </ul>
+</div>
+
+<div class="section" style="background: rgba(0,102,204,0.05); border-left-color: var(--accent);">
+  <h2>❓ Need Help?</h2>
+  <p>If you encounter issues:</p>
+  <ul>
+    <li>📧 Contact your system administrator</li>
+    <li>📚 Check the system's built-in help (click the ? icon if available)</li>
+    <li>💻 Visit the documentation or wiki for your installation</li>
+    <li>🐛 Report bugs with details: what you did, what happened, what you expected</li>
+  </ul>
+</div>
+
+<footer style="text-align: center; margin-top: 3em; padding-top: 2em; border-top: 1px solid var(--border); color: #666;">
+  <p><strong>Nexus SCADA</strong> – Industrial HMI & SCADA Platform</p>
+  <p style="font-size: 0.9em;">Last updated: October 2026</p>
+</footer>
+
+</body>
+</html>
+</body></html>
